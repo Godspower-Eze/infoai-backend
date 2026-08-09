@@ -1,5 +1,15 @@
 .PHONY: build test generate migration migrate run
 
+GODOTENV_RUN := go run github.com/joho/godotenv/cmd/godotenv
+
+define run_with_dotenv
+	@if [ -f .env ]; then \
+		$(GODOTENV_RUN) -f .env $(1); \
+	else \
+		$(1); \
+	fi
+endef
+
 build:
 	go build ./cmd/api
 
@@ -11,10 +21,10 @@ generate:
 
 migration:
 	@test -n "$(NAME)" || (echo "usage: make migration NAME=describe_change"; exit 1)
-	go run ./ent/migrate/generate.go $(NAME)
+	$(call run_with_dotenv,go run ./ent/migrate/generate.go $(NAME))
 
 migrate:
-	atlas migrate apply --env local
+	$(call run_with_dotenv,atlas migrate apply --env local)
 
 run:
 	go run ./cmd/api

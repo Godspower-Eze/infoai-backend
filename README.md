@@ -20,7 +20,7 @@ Requirements: Go 1.26, PostgreSQL (or Podman/Docker Compose), and the Atlas CLI 
 3. Apply migrations with `make migrate`.
 4. Start the service with `make run`.
 
-`cmd/api` automatically loads `.env` from its current working directory. Variables already provided by your shell, container, CI system, or deployment platform take precedence over values in the file. A missing `.env` is allowed; a malformed or unreadable file stops startup.
+`cmd/api`, `make migrate`, and `make migration` automatically load `.env` from the project directory. Variables already provided by your shell, container, CI system, or deployment platform take precedence over values in the file. A missing `.env` is allowed when the required variables are already present; a malformed or unreadable file stops the command.
 
 The API listens on `HTTP_ADDRESS` (default `:8080`). Liveness is at `GET /health/live`; readiness is at `GET /health/ready`.
 
