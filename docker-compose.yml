@@ -13,7 +13,7 @@ services:
       timeout: 3s
       retries: 15
     volumes:
-      - infoai-postgres:/var/lib/postgresql/data
+      - infoai-postgres:/var/lib/postgresql
 
 volumes:
   infoai-postgres:
