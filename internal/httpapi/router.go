@@ -1,0 +1,131 @@
+package httpapi
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"time"
+
+	"github.com/alexedwards/scs/v2"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
+	"github.com/godspowere/infoai-backend/internal/auth"
+	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
+	"github.com/google/uuid"
+)
+
+type AuthService interface {
+	Register(ctx context.Context, email, password string) (auth.User, error)
+	Authenticate(ctx context.Context, email, password string) (auth.User, error)
+	User(ctx context.Context, id uuid.UUID) (auth.User, error)
+}
+
+type XService interface {
+	BeginAuthorization(ctx context.Context) (string, error)
+	CompleteAuthorization(ctx context.Context, ownerID uuid.UUID, state, code string) (xintegration.Account, error)
+	Accounts(ctx context.Context, ownerID uuid.UUID) ([]xintegration.Account, error)
+	Disconnect(ctx context.Context, ownerID, accountID uuid.UUID) error
+}
+
+type Readiness interface {
+	Ping(ctx context.Context) error
+}
+
+type Dependencies struct {
+	Auth                 AuthService
+	X                    XService
+	Sessions             *scs.SessionManager
+	Readiness            Readiness
+	FrontendOrigin       string
+	FrontendXRedirectURL string
+	TrustedProxyCIDRs    []string
+}
+
+type API struct {
+	auth                 AuthService
+	x                    XService
+	sessions             *scs.SessionManager
+	readiness            Readiness
+	frontendXRedirectURL string
+	signinEmails         *fixedWindowLimiter
+}
+
+func NewRouter(dependencies Dependencies) (http.Handler, error) {
+	if dependencies.Auth == nil || dependencies.X == nil || dependencies.Sessions == nil || dependencies.Readiness == nil {
+		return nil, errors.New("HTTP API dependencies must not be nil")
+	}
+	protection := http.NewCrossOriginProtection()
+	if err := protection.AddTrustedOrigin(dependencies.FrontendOrigin); err != nil {
+		return nil, err
+	}
+	api := &API{
+		auth:                 dependencies.Auth,
+		x:                    dependencies.X,
+		sessions:             dependencies.Sessions,
+		readiness:            dependencies.Readiness,
+		frontendXRedirectURL: dependencies.FrontendXRedirectURL,
+		signinEmails:         newFixedWindowLimiter(5, time.Minute),
+	}
+
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Timeout(30 * time.Second))
+	if len(dependencies.TrustedProxyCIDRs) == 0 {
+		router.Use(middleware.ClientIPFromRemoteAddr)
+	} else {
+		router.Use(middleware.ClientIPFromXFF(dependencies.TrustedProxyCIDRs...))
+	}
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{dependencies.FrontendOrigin},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		AllowedHeaders:   []string{"Accept", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+	router.Use(protection.Handler)
+	router.Use(dependencies.Sessions.LoadAndSave)
+
+	router.Get("/health/live", api.live)
+	router.Get("/health/ready", api.ready)
+	router.Route("/api/v1", func(router chi.Router) {
+		router.Route("/auth", func(router chi.Router) {
+			router.With(httprate.LimitBy(5, time.Minute, clientIPRateLimitKey)).Post("/signup", api.signup)
+			router.With(httprate.LimitBy(10, time.Minute, clientIPRateLimitKey)).Post("/signin", api.signin)
+			router.Post("/signout", api.signout)
+			router.With(api.requireUser).Get("/me", api.me)
+		})
+		router.Route("/integrations/x", func(router chi.Router) {
+			router.Use(api.requireUser)
+			router.Post("/authorize", api.authorizeX)
+			router.Get("/callback", api.xCallback)
+			router.Get("/accounts", api.xAccounts)
+			router.Delete("/accounts/{accountID}", api.disconnectX)
+		})
+	})
+	return router, nil
+}
+
+func clientIPRateLimitKey(request *http.Request) (string, error) {
+	return httprate.CanonicalizeIP(middleware.GetClientIP(request.Context())), nil
+}
+
+type userIDContextKey struct{}
+
+func (api *API) requireUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		userID, err := auth.CurrentUserID(request.Context(), api.sessions)
+		if err != nil {
+			writeError(response, http.StatusUnauthorized, "unauthenticated", "Authentication is required.", nil)
+			return
+		}
+		ctx := context.WithValue(request.Context(), userIDContextKey{}, userID)
+		next.ServeHTTP(response, request.WithContext(ctx))
+	})
+}
+
+func requestUserID(request *http.Request) uuid.UUID {
+	return request.Context().Value(userIDContextKey{}).(uuid.UUID)
+}
