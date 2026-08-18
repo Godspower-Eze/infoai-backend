@@ -10,7 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/scssession"
+	"github.com/Godspower-Eze/infoai-backend/ent/scssession"
 )
 
 // SCSSessionCreate is the builder for creating a SCSSession entity.

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/godspowere/infoai-backend/ent"
+	"github.com/Godspower-Eze/infoai-backend/ent"
 )
 
 // The SCSSessionFunc type is an adapter to allow the use of ordinary

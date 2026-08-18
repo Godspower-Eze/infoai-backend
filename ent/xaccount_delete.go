@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/predicate"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 )
 
 // XAccountDelete is the builder for deleting a XAccount entity.

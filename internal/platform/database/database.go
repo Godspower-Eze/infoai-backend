@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/godspowere/infoai-backend/ent"
+	"github.com/Godspower-Eze/infoai-backend/ent"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 )

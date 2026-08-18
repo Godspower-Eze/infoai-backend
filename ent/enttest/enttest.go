@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/godspowere/infoai-backend/ent"
+	"github.com/Godspower-Eze/infoai-backend/ent"
 	// required by schema hooks.
-	_ "github.com/godspowere/infoai-backend/ent/runtime"
+	_ "github.com/Godspower-Eze/infoai-backend/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/godspowere/infoai-backend/ent/migrate"
+	"github.com/Godspower-Eze/infoai-backend/ent/migrate"
 )
 
 type (

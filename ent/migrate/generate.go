@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/godspowere/infoai-backend/ent/migrate"
+	"github.com/Godspower-Eze/infoai-backend/ent/migrate"
 
 	atlas "ariga.io/atlas/sql/migrate"
 	"entgo.io/ent/dialect"

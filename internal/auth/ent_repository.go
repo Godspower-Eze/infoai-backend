@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/godspowere/infoai-backend/ent"
-	entuser "github.com/godspowere/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent"
+	entuser "github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/google/uuid"
 )
 

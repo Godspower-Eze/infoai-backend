@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	"github.com/godspowere/infoai-backend/ent"
-	"github.com/godspowere/infoai-backend/ent/enttest"
+	"github.com/Godspower-Eze/infoai-backend/ent"
+	"github.com/Godspower-Eze/infoai-backend/ent/enttest"
 	_ "github.com/mattn/go-sqlite3"
 )
 

@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/predicate"
-	"github.com/godspowere/infoai-backend/ent/scssession"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/scssession"
 )
 
 // SCSSessionDelete is the builder for deleting a SCSSession entity.

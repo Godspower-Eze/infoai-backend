@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"entgo.io/ent/dialect"
-	"github.com/godspowere/infoai-backend/ent/enttest"
+	"github.com/Godspower-Eze/infoai-backend/ent/enttest"
 	_ "github.com/mattn/go-sqlite3"
 )
 

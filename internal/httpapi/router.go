@@ -11,8 +11,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
-	"github.com/godspowere/infoai-backend/internal/auth"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
 	"github.com/google/uuid"
 )
 

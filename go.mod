@@ -1,4 +1,4 @@
-module github.com/godspowere/infoai-backend
+module github.com/Godspower-Eze/infoai-backend
 
 go 1.26.0
 

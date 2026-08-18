@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/godspowere/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
 	"github.com/google/uuid"
 )
 

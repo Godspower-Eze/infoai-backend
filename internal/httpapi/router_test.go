@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2/memstore"
-	"github.com/godspowere/infoai-backend/internal/auth"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
 	"github.com/google/uuid"
 )
 

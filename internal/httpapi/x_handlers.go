@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
 	"github.com/google/uuid"
 )
 

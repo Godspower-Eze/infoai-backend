@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/pgxstore"
-	"github.com/godspowere/infoai-backend/internal/auth"
-	"github.com/godspowere/infoai-backend/internal/httpapi"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
-	"github.com/godspowere/infoai-backend/internal/platform/config"
-	"github.com/godspowere/infoai-backend/internal/platform/database"
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
+	"github.com/Godspower-Eze/infoai-backend/internal/httpapi"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/database"
 )
 
 func main() {

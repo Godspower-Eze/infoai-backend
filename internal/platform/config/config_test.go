@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godspowere/infoai-backend/internal/platform/config"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
 )
 
 func validEnvironment() map[string]string {
