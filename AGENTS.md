@@ -2,7 +2,7 @@
 
 ## Workflow
 
-- Break implementation into reviewable steps. Complete one step, report changes, files, validation, and issues, then wait for approval.
+- Break implementation into reviewable steps. Complete one step, report changes, files, validation, and issues, then wait for approval before commit.
 - Optimize for correction over speed. Combine steps only when explicitly requested.
 - Read-only planning exploration may be grouped.
 
