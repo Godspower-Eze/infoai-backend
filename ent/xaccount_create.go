@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
@@ -86,6 +87,34 @@ func (_c *XAccountCreate) SetScopes(v []string) *XAccountCreate {
 	return _c
 }
 
+// SetRateLimitRemaining sets the "rate_limit_remaining" field.
+func (_c *XAccountCreate) SetRateLimitRemaining(v int) *XAccountCreate {
+	_c.mutation.SetRateLimitRemaining(v)
+	return _c
+}
+
+// SetNillableRateLimitRemaining sets the "rate_limit_remaining" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableRateLimitRemaining(v *int) *XAccountCreate {
+	if v != nil {
+		_c.SetRateLimitRemaining(*v)
+	}
+	return _c
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (_c *XAccountCreate) SetRateLimitResetAt(v time.Time) *XAccountCreate {
+	_c.mutation.SetRateLimitResetAt(v)
+	return _c
+}
+
+// SetNillableRateLimitResetAt sets the "rate_limit_reset_at" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableRateLimitResetAt(v *time.Time) *XAccountCreate {
+	if v != nil {
+		_c.SetRateLimitResetAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *XAccountCreate) SetCreatedAt(v time.Time) *XAccountCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -137,6 +166,21 @@ func (_c *XAccountCreate) SetOwnerID(id uuid.UUID) *XAccountCreate {
 // SetOwner sets the "owner" edge to the User entity.
 func (_c *XAccountCreate) SetOwner(v *User) *XAccountCreate {
 	return _c.SetOwnerID(v.ID)
+}
+
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_c *XAccountCreate) AddPostIDs(ids ...uuid.UUID) *XAccountCreate {
+	_c.mutation.AddPostIDs(ids...)
+	return _c
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_c *XAccountCreate) AddPosts(v ...*Post) *XAccountCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPostIDs(ids...)
 }
 
 // Mutation returns the XAccountMutation object of the builder.
@@ -226,6 +270,11 @@ func (_c *XAccountCreate) check() error {
 	if _, ok := _c.mutation.Scopes(); !ok {
 		return &ValidationError{Name: "scopes", err: errors.New(`ent: missing required field "XAccount.scopes"`)}
 	}
+	if v, ok := _c.mutation.RateLimitRemaining(); ok {
+		if err := xaccount.RateLimitRemainingValidator(v); err != nil {
+			return &ValidationError{Name: "rate_limit_remaining", err: fmt.Errorf(`ent: validator failed for field "XAccount.rate_limit_remaining": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "XAccount.created_at"`)}
 	}
@@ -302,6 +351,14 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 		_spec.SetField(xaccount.FieldScopes, field.TypeJSON, value)
 		_node.Scopes = value
 	}
+	if value, ok := _c.mutation.RateLimitRemaining(); ok {
+		_spec.SetField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+		_node.RateLimitRemaining = &value
+	}
+	if value, ok := _c.mutation.RateLimitResetAt(); ok {
+		_spec.SetField(xaccount.FieldRateLimitResetAt, field.TypeTime, value)
+		_node.RateLimitResetAt = &value
+	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(xaccount.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
@@ -325,6 +382,22 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_x_accounts = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

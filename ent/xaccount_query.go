@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -11,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
 	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
@@ -25,6 +27,7 @@ type XAccountQuery struct {
 	inters     []Interceptor
 	predicates []predicate.XAccount
 	withOwner  *UserQuery
+	withPosts  *PostQuery
 	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +80,28 @@ func (_q *XAccountQuery) QueryOwner() *UserQuery {
 			sqlgraph.From(xaccount.Table, xaccount.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, xaccount.OwnerTable, xaccount.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPosts chains the current query on the "posts" edge.
+func (_q *XAccountQuery) QueryPosts() *PostQuery {
+	query := (&PostClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(xaccount.Table, xaccount.FieldID, selector),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, xaccount.PostsTable, xaccount.PostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -277,6 +302,7 @@ func (_q *XAccountQuery) Clone() *XAccountQuery {
 		inters:     append([]Interceptor{}, _q.inters...),
 		predicates: append([]predicate.XAccount{}, _q.predicates...),
 		withOwner:  _q.withOwner.Clone(),
+		withPosts:  _q.withPosts.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +317,17 @@ func (_q *XAccountQuery) WithOwner(opts ...func(*UserQuery)) *XAccountQuery {
 		opt(query)
 	}
 	_q.withOwner = query
+	return _q
+}
+
+// WithPosts tells the query-builder to eager-load the nodes that are connected to
+// the "posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *XAccountQuery) WithPosts(opts ...func(*PostQuery)) *XAccountQuery {
+	query := (&PostClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPosts = query
 	return _q
 }
 
@@ -373,8 +410,9 @@ func (_q *XAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*XAc
 		nodes       = []*XAccount{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withOwner != nil,
+			_q.withPosts != nil,
 		}
 	)
 	if _q.withOwner != nil {
@@ -404,6 +442,13 @@ func (_q *XAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*XAc
 	if query := _q.withOwner; query != nil {
 		if err := _q.loadOwner(ctx, query, nodes, nil,
 			func(n *XAccount, e *User) { n.Edges.Owner = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPosts; query != nil {
+		if err := _q.loadPosts(ctx, query, nodes,
+			func(n *XAccount) { n.Edges.Posts = []*Post{} },
+			func(n *XAccount, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -439,6 +484,36 @@ func (_q *XAccountQuery) loadOwner(ctx context.Context, query *UserQuery, nodes 
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *XAccountQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*XAccount, init func(*XAccount), assign func(*XAccount, *Post)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*XAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(post.FieldXAccountID)
+	}
+	query.Where(predicate.Post(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(xaccount.PostsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.XAccountID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "x_account_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

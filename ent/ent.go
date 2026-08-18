@@ -12,7 +12,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/postitem"
+	"github.com/Godspower-Eze/infoai-backend/ent/publicationattempt"
 	"github.com/Godspower-Eze/infoai-backend/ent/scssession"
+	"github.com/Godspower-Eze/infoai-backend/ent/storagedeletion"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 )
@@ -75,9 +80,14 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			scssession.Table: scssession.ValidColumn,
-			user.Table:       user.ValidColumn,
-			xaccount.Table:   xaccount.ValidColumn,
+			mediaasset.Table:         mediaasset.ValidColumn,
+			post.Table:               post.ValidColumn,
+			postitem.Table:           postitem.ValidColumn,
+			publicationattempt.Table: publicationattempt.ValidColumn,
+			scssession.Table:         scssession.ValidColumn,
+			storagedeletion.Table:    storagedeletion.ValidColumn,
+			user.Table:               user.ValidColumn,
+			xaccount.Table:           xaccount.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

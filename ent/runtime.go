@@ -5,7 +5,12 @@ package ent
 import (
 	"time"
 
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/postitem"
+	"github.com/Godspower-Eze/infoai-backend/ent/publicationattempt"
 	"github.com/Godspower-Eze/infoai-backend/ent/schema"
+	"github.com/Godspower-Eze/infoai-backend/ent/storagedeletion"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
@@ -15,6 +20,182 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	mediaassetFields := schema.MediaAsset{}.Fields()
+	_ = mediaassetFields
+	// mediaassetDescPosition is the schema descriptor for position field.
+	mediaassetDescPosition := mediaassetFields[1].Descriptor()
+	// mediaasset.PositionValidator is a validator for the "position" field. It is called by the builders before save.
+	mediaasset.PositionValidator = mediaassetDescPosition.Validators[0].(func(int) error)
+	// mediaassetDescStorageKey is the schema descriptor for storage_key field.
+	mediaassetDescStorageKey := mediaassetFields[4].Descriptor()
+	// mediaasset.StorageKeyValidator is a validator for the "storage_key" field. It is called by the builders before save.
+	mediaasset.StorageKeyValidator = mediaassetDescStorageKey.Validators[0].(func(string) error)
+	// mediaassetDescOriginalFilename is the schema descriptor for original_filename field.
+	mediaassetDescOriginalFilename := mediaassetFields[5].Descriptor()
+	// mediaasset.OriginalFilenameValidator is a validator for the "original_filename" field. It is called by the builders before save.
+	mediaasset.OriginalFilenameValidator = mediaassetDescOriginalFilename.Validators[0].(func(string) error)
+	// mediaassetDescMimeType is the schema descriptor for mime_type field.
+	mediaassetDescMimeType := mediaassetFields[6].Descriptor()
+	// mediaasset.MimeTypeValidator is a validator for the "mime_type" field. It is called by the builders before save.
+	mediaasset.MimeTypeValidator = mediaassetDescMimeType.Validators[0].(func(string) error)
+	// mediaassetDescSizeBytes is the schema descriptor for size_bytes field.
+	mediaassetDescSizeBytes := mediaassetFields[7].Descriptor()
+	// mediaasset.SizeBytesValidator is a validator for the "size_bytes" field. It is called by the builders before save.
+	mediaasset.SizeBytesValidator = mediaassetDescSizeBytes.Validators[0].(func(int64) error)
+	// mediaassetDescSha256Checksum is the schema descriptor for sha256_checksum field.
+	mediaassetDescSha256Checksum := mediaassetFields[8].Descriptor()
+	// mediaasset.Sha256ChecksumValidator is a validator for the "sha256_checksum" field. It is called by the builders before save.
+	mediaasset.Sha256ChecksumValidator = func() func([]byte) error {
+		validators := mediaassetDescSha256Checksum.Validators
+		fns := [...]func([]byte) error{
+			validators[0].(func([]byte) error),
+			validators[1].(func([]byte) error),
+		}
+		return func(sha256_checksum []byte) error {
+			for _, fn := range fns {
+				if err := fn(sha256_checksum); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// mediaassetDescCreatedAt is the schema descriptor for created_at field.
+	mediaassetDescCreatedAt := mediaassetFields[10].Descriptor()
+	// mediaasset.DefaultCreatedAt holds the default value on creation for the created_at field.
+	mediaasset.DefaultCreatedAt = mediaassetDescCreatedAt.Default.(func() time.Time)
+	// mediaassetDescID is the schema descriptor for id field.
+	mediaassetDescID := mediaassetFields[0].Descriptor()
+	// mediaasset.DefaultID holds the default value on creation for the id field.
+	mediaasset.DefaultID = mediaassetDescID.Default.(func() uuid.UUID)
+	postFields := schema.Post{}.Fields()
+	_ = postFields
+	// postDescActiveRiverJobID is the schema descriptor for active_river_job_id field.
+	postDescActiveRiverJobID := postFields[9].Descriptor()
+	// post.ActiveRiverJobIDValidator is a validator for the "active_river_job_id" field. It is called by the builders before save.
+	post.ActiveRiverJobIDValidator = postDescActiveRiverJobID.Validators[0].(func(int64) error)
+	// postDescAttemptCount is the schema descriptor for attempt_count field.
+	postDescAttemptCount := postFields[10].Descriptor()
+	// post.DefaultAttemptCount holds the default value on creation for the attempt_count field.
+	post.DefaultAttemptCount = postDescAttemptCount.Default.(int)
+	// post.AttemptCountValidator is a validator for the "attempt_count" field. It is called by the builders before save.
+	post.AttemptCountValidator = postDescAttemptCount.Validators[0].(func(int) error)
+	// postDescLastErrorCode is the schema descriptor for last_error_code field.
+	postDescLastErrorCode := postFields[11].Descriptor()
+	// post.LastErrorCodeValidator is a validator for the "last_error_code" field. It is called by the builders before save.
+	post.LastErrorCodeValidator = postDescLastErrorCode.Validators[0].(func(string) error)
+	// postDescLastErrorMessage is the schema descriptor for last_error_message field.
+	postDescLastErrorMessage := postFields[12].Descriptor()
+	// post.LastErrorMessageValidator is a validator for the "last_error_message" field. It is called by the builders before save.
+	post.LastErrorMessageValidator = postDescLastErrorMessage.Validators[0].(func(string) error)
+	// postDescLeaseOwner is the schema descriptor for lease_owner field.
+	postDescLeaseOwner := postFields[14].Descriptor()
+	// post.LeaseOwnerValidator is a validator for the "lease_owner" field. It is called by the builders before save.
+	post.LeaseOwnerValidator = postDescLeaseOwner.Validators[0].(func(string) error)
+	// postDescLeaseVersion is the schema descriptor for lease_version field.
+	postDescLeaseVersion := postFields[16].Descriptor()
+	// post.DefaultLeaseVersion holds the default value on creation for the lease_version field.
+	post.DefaultLeaseVersion = postDescLeaseVersion.Default.(int64)
+	// post.LeaseVersionValidator is a validator for the "lease_version" field. It is called by the builders before save.
+	post.LeaseVersionValidator = postDescLeaseVersion.Validators[0].(func(int64) error)
+	// postDescCreatedAt is the schema descriptor for created_at field.
+	postDescCreatedAt := postFields[17].Descriptor()
+	// post.DefaultCreatedAt holds the default value on creation for the created_at field.
+	post.DefaultCreatedAt = postDescCreatedAt.Default.(func() time.Time)
+	// postDescUpdatedAt is the schema descriptor for updated_at field.
+	postDescUpdatedAt := postFields[18].Descriptor()
+	// post.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	post.DefaultUpdatedAt = postDescUpdatedAt.Default.(func() time.Time)
+	// post.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	post.UpdateDefaultUpdatedAt = postDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// postDescID is the schema descriptor for id field.
+	postDescID := postFields[0].Descriptor()
+	// post.DefaultID holds the default value on creation for the id field.
+	post.DefaultID = postDescID.Default.(func() uuid.UUID)
+	postitemFields := schema.PostItem{}.Fields()
+	_ = postitemFields
+	// postitemDescPosition is the schema descriptor for position field.
+	postitemDescPosition := postitemFields[1].Descriptor()
+	// postitem.PositionValidator is a validator for the "position" field. It is called by the builders before save.
+	postitem.PositionValidator = postitemDescPosition.Validators[0].(func(int) error)
+	// postitemDescText is the schema descriptor for text field.
+	postitemDescText := postitemFields[3].Descriptor()
+	// postitem.DefaultText holds the default value on creation for the text field.
+	postitem.DefaultText = postitemDescText.Default.(string)
+	// postitemDescCreatedAt is the schema descriptor for created_at field.
+	postitemDescCreatedAt := postitemFields[6].Descriptor()
+	// postitem.DefaultCreatedAt holds the default value on creation for the created_at field.
+	postitem.DefaultCreatedAt = postitemDescCreatedAt.Default.(func() time.Time)
+	// postitemDescUpdatedAt is the schema descriptor for updated_at field.
+	postitemDescUpdatedAt := postitemFields[7].Descriptor()
+	// postitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	postitem.DefaultUpdatedAt = postitemDescUpdatedAt.Default.(func() time.Time)
+	// postitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	postitem.UpdateDefaultUpdatedAt = postitemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// postitemDescID is the schema descriptor for id field.
+	postitemDescID := postitemFields[0].Descriptor()
+	// postitem.DefaultID holds the default value on creation for the id field.
+	postitem.DefaultID = postitemDescID.Default.(func() uuid.UUID)
+	publicationattemptFields := schema.PublicationAttempt{}.Fields()
+	_ = publicationattemptFields
+	// publicationattemptDescAttemptNumber is the schema descriptor for attempt_number field.
+	publicationattemptDescAttemptNumber := publicationattemptFields[1].Descriptor()
+	// publicationattempt.AttemptNumberValidator is a validator for the "attempt_number" field. It is called by the builders before save.
+	publicationattempt.AttemptNumberValidator = publicationattemptDescAttemptNumber.Validators[0].(func(int) error)
+	// publicationattemptDescRetryable is the schema descriptor for retryable field.
+	publicationattemptDescRetryable := publicationattemptFields[5].Descriptor()
+	// publicationattempt.DefaultRetryable holds the default value on creation for the retryable field.
+	publicationattempt.DefaultRetryable = publicationattemptDescRetryable.Default.(bool)
+	// publicationattemptDescErrorCode is the schema descriptor for error_code field.
+	publicationattemptDescErrorCode := publicationattemptFields[6].Descriptor()
+	// publicationattempt.ErrorCodeValidator is a validator for the "error_code" field. It is called by the builders before save.
+	publicationattempt.ErrorCodeValidator = publicationattemptDescErrorCode.Validators[0].(func(string) error)
+	// publicationattemptDescErrorMessage is the schema descriptor for error_message field.
+	publicationattemptDescErrorMessage := publicationattemptFields[7].Descriptor()
+	// publicationattempt.ErrorMessageValidator is a validator for the "error_message" field. It is called by the builders before save.
+	publicationattempt.ErrorMessageValidator = publicationattemptDescErrorMessage.Validators[0].(func(string) error)
+	// publicationattemptDescStartedAt is the schema descriptor for started_at field.
+	publicationattemptDescStartedAt := publicationattemptFields[8].Descriptor()
+	// publicationattempt.DefaultStartedAt holds the default value on creation for the started_at field.
+	publicationattempt.DefaultStartedAt = publicationattemptDescStartedAt.Default.(func() time.Time)
+	// publicationattemptDescID is the schema descriptor for id field.
+	publicationattemptDescID := publicationattemptFields[0].Descriptor()
+	// publicationattempt.DefaultID holds the default value on creation for the id field.
+	publicationattempt.DefaultID = publicationattemptDescID.Default.(func() uuid.UUID)
+	storagedeletionFields := schema.StorageDeletion{}.Fields()
+	_ = storagedeletionFields
+	// storagedeletionDescStorageKey is the schema descriptor for storage_key field.
+	storagedeletionDescStorageKey := storagedeletionFields[1].Descriptor()
+	// storagedeletion.StorageKeyValidator is a validator for the "storage_key" field. It is called by the builders before save.
+	storagedeletion.StorageKeyValidator = storagedeletionDescStorageKey.Validators[0].(func(string) error)
+	// storagedeletionDescAttemptCount is the schema descriptor for attempt_count field.
+	storagedeletionDescAttemptCount := storagedeletionFields[2].Descriptor()
+	// storagedeletion.DefaultAttemptCount holds the default value on creation for the attempt_count field.
+	storagedeletion.DefaultAttemptCount = storagedeletionDescAttemptCount.Default.(int)
+	// storagedeletion.AttemptCountValidator is a validator for the "attempt_count" field. It is called by the builders before save.
+	storagedeletion.AttemptCountValidator = storagedeletionDescAttemptCount.Validators[0].(func(int) error)
+	// storagedeletionDescLastErrorCode is the schema descriptor for last_error_code field.
+	storagedeletionDescLastErrorCode := storagedeletionFields[4].Descriptor()
+	// storagedeletion.LastErrorCodeValidator is a validator for the "last_error_code" field. It is called by the builders before save.
+	storagedeletion.LastErrorCodeValidator = storagedeletionDescLastErrorCode.Validators[0].(func(string) error)
+	// storagedeletionDescLastErrorMessage is the schema descriptor for last_error_message field.
+	storagedeletionDescLastErrorMessage := storagedeletionFields[5].Descriptor()
+	// storagedeletion.LastErrorMessageValidator is a validator for the "last_error_message" field. It is called by the builders before save.
+	storagedeletion.LastErrorMessageValidator = storagedeletionDescLastErrorMessage.Validators[0].(func(string) error)
+	// storagedeletionDescCreatedAt is the schema descriptor for created_at field.
+	storagedeletionDescCreatedAt := storagedeletionFields[6].Descriptor()
+	// storagedeletion.DefaultCreatedAt holds the default value on creation for the created_at field.
+	storagedeletion.DefaultCreatedAt = storagedeletionDescCreatedAt.Default.(func() time.Time)
+	// storagedeletionDescUpdatedAt is the schema descriptor for updated_at field.
+	storagedeletionDescUpdatedAt := storagedeletionFields[7].Descriptor()
+	// storagedeletion.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	storagedeletion.DefaultUpdatedAt = storagedeletionDescUpdatedAt.Default.(func() time.Time)
+	// storagedeletion.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	storagedeletion.UpdateDefaultUpdatedAt = storagedeletionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// storagedeletionDescID is the schema descriptor for id field.
+	storagedeletionDescID := storagedeletionFields[0].Descriptor()
+	// storagedeletion.DefaultID holds the default value on creation for the id field.
+	storagedeletion.DefaultID = storagedeletionDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescEmail is the schema descriptor for email field.
@@ -71,12 +252,16 @@ func init() {
 	xaccountDescScopes := xaccountFields[8].Descriptor()
 	// xaccount.DefaultScopes holds the default value on creation for the scopes field.
 	xaccount.DefaultScopes = xaccountDescScopes.Default.([]string)
+	// xaccountDescRateLimitRemaining is the schema descriptor for rate_limit_remaining field.
+	xaccountDescRateLimitRemaining := xaccountFields[9].Descriptor()
+	// xaccount.RateLimitRemainingValidator is a validator for the "rate_limit_remaining" field. It is called by the builders before save.
+	xaccount.RateLimitRemainingValidator = xaccountDescRateLimitRemaining.Validators[0].(func(int) error)
 	// xaccountDescCreatedAt is the schema descriptor for created_at field.
-	xaccountDescCreatedAt := xaccountFields[9].Descriptor()
+	xaccountDescCreatedAt := xaccountFields[11].Descriptor()
 	// xaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
 	xaccount.DefaultCreatedAt = xaccountDescCreatedAt.Default.(func() time.Time)
 	// xaccountDescUpdatedAt is the schema descriptor for updated_at field.
-	xaccountDescUpdatedAt := xaccountFields[10].Descriptor()
+	xaccountDescUpdatedAt := xaccountFields[12].Descriptor()
 	// xaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	xaccount.DefaultUpdatedAt = xaccountDescUpdatedAt.Default.(func() time.Time)
 	// xaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

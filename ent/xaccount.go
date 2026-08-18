@@ -36,6 +36,10 @@ type XAccount struct {
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 	// Scopes holds the value of the "scopes" field.
 	Scopes []string `json:"scopes,omitempty"`
+	// RateLimitRemaining holds the value of the "rate_limit_remaining" field.
+	RateLimitRemaining *int `json:"rate_limit_remaining,omitempty"`
+	// RateLimitResetAt holds the value of the "rate_limit_reset_at" field.
+	RateLimitResetAt *time.Time `json:"rate_limit_reset_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -51,9 +55,11 @@ type XAccount struct {
 type XAccountEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// Posts holds the value of the posts edge.
+	Posts []*Post `json:"posts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -67,6 +73,15 @@ func (e XAccountEdges) OwnerOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
+// PostsOrErr returns the Posts value or an error if the edge
+// was not loaded in eager-loading.
+func (e XAccountEdges) PostsOrErr() ([]*Post, error) {
+	if e.loadedTypes[1] {
+		return e.Posts, nil
+	}
+	return nil, &NotLoadedError{edge: "posts"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*XAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -74,9 +89,11 @@ func (*XAccount) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case xaccount.FieldAccessToken, xaccount.FieldRefreshToken, xaccount.FieldScopes:
 			values[i] = new([]byte)
+		case xaccount.FieldRateLimitRemaining:
+			values[i] = new(sql.NullInt64)
 		case xaccount.FieldXUserID, xaccount.FieldUsername, xaccount.FieldDisplayName, xaccount.FieldProfileImageURL:
 			values[i] = new(sql.NullString)
-		case xaccount.FieldTokenExpiry, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
+		case xaccount.FieldTokenExpiry, xaccount.FieldRateLimitResetAt, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case xaccount.FieldID:
 			values[i] = new(uuid.UUID)
@@ -154,6 +171,20 @@ func (_m *XAccount) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
 			}
+		case xaccount.FieldRateLimitRemaining:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_limit_remaining", values[i])
+			} else if value.Valid {
+				_m.RateLimitRemaining = new(int)
+				*_m.RateLimitRemaining = int(value.Int64)
+			}
+		case xaccount.FieldRateLimitResetAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_limit_reset_at", values[i])
+			} else if value.Valid {
+				_m.RateLimitResetAt = new(time.Time)
+				*_m.RateLimitResetAt = value.Time
+			}
 		case xaccount.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -189,6 +220,11 @@ func (_m *XAccount) Value(name string) (ent.Value, error) {
 // QueryOwner queries the "owner" edge of the XAccount entity.
 func (_m *XAccount) QueryOwner() *UserQuery {
 	return NewXAccountClient(_m.config).QueryOwner(_m)
+}
+
+// QueryPosts queries the "posts" edge of the XAccount entity.
+func (_m *XAccount) QueryPosts() *PostQuery {
+	return NewXAccountClient(_m.config).QueryPosts(_m)
 }
 
 // Update returns a builder for updating this XAccount.
@@ -237,6 +273,16 @@ func (_m *XAccount) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
+	builder.WriteString(", ")
+	if v := _m.RateLimitRemaining; v != nil {
+		builder.WriteString("rate_limit_remaining=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.RateLimitResetAt; v != nil {
+		builder.WriteString("rate_limit_reset_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

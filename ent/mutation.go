@@ -11,8 +11,13 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/postitem"
 	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/publicationattempt"
 	"github.com/Godspower-Eze/infoai-backend/ent/scssession"
+	"github.com/Godspower-Eze/infoai-backend/ent/storagedeletion"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
@@ -27,10 +32,4624 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeSCSSession = "SCSSession"
-	TypeUser       = "User"
-	TypeXAccount   = "XAccount"
+	TypeMediaAsset         = "MediaAsset"
+	TypePost               = "Post"
+	TypePostItem           = "PostItem"
+	TypePublicationAttempt = "PublicationAttempt"
+	TypeSCSSession         = "SCSSession"
+	TypeStorageDeletion    = "StorageDeletion"
+	TypeUser               = "User"
+	TypeXAccount           = "XAccount"
 )
+
+// MediaAssetMutation represents an operation that mutates the MediaAsset nodes in the graph.
+type MediaAssetMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	position          *int
+	addposition       *int
+	storage_key       *string
+	original_filename *string
+	mime_type         *string
+	size_bytes        *int64
+	addsize_bytes     *int64
+	sha256_checksum   *[]byte
+	alt_text          *string
+	created_at        *time.Time
+	clearedFields     map[string]struct{}
+	owner             *uuid.UUID
+	clearedowner      bool
+	post_item         *uuid.UUID
+	clearedpost_item  bool
+	done              bool
+	oldValue          func(context.Context) (*MediaAsset, error)
+	predicates        []predicate.MediaAsset
+}
+
+var _ ent.Mutation = (*MediaAssetMutation)(nil)
+
+// mediaassetOption allows management of the mutation configuration using functional options.
+type mediaassetOption func(*MediaAssetMutation)
+
+// newMediaAssetMutation creates new mutation for the MediaAsset entity.
+func newMediaAssetMutation(c config, op Op, opts ...mediaassetOption) *MediaAssetMutation {
+	m := &MediaAssetMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMediaAsset,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMediaAssetID sets the ID field of the mutation.
+func withMediaAssetID(id uuid.UUID) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MediaAsset
+		)
+		m.oldValue = func(ctx context.Context) (*MediaAsset, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MediaAsset.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMediaAsset sets the old MediaAsset of the mutation.
+func withMediaAsset(node *MediaAsset) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		m.oldValue = func(context.Context) (*MediaAsset, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MediaAssetMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MediaAssetMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MediaAsset entities.
+func (m *MediaAssetMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MediaAssetMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MediaAssetMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MediaAsset.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPosition sets the "position" field.
+func (m *MediaAssetMutation) SetPosition(i int) {
+	m.position = &i
+	m.addposition = nil
+}
+
+// Position returns the value of the "position" field in the mutation.
+func (m *MediaAssetMutation) Position() (r int, exists bool) {
+	v := m.position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPosition returns the old "position" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldPosition(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPosition: %w", err)
+	}
+	return oldValue.Position, nil
+}
+
+// AddPosition adds i to the "position" field.
+func (m *MediaAssetMutation) AddPosition(i int) {
+	if m.addposition != nil {
+		*m.addposition += i
+	} else {
+		m.addposition = &i
+	}
+}
+
+// AddedPosition returns the value that was added to the "position" field in this mutation.
+func (m *MediaAssetMutation) AddedPosition() (r int, exists bool) {
+	v := m.addposition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPosition resets all changes to the "position" field.
+func (m *MediaAssetMutation) ResetPosition() {
+	m.position = nil
+	m.addposition = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *MediaAssetMutation) SetOwnerID(u uuid.UUID) {
+	m.owner = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *MediaAssetMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *MediaAssetMutation) ResetOwnerID() {
+	m.owner = nil
+}
+
+// SetPostItemID sets the "post_item_id" field.
+func (m *MediaAssetMutation) SetPostItemID(u uuid.UUID) {
+	m.post_item = &u
+}
+
+// PostItemID returns the value of the "post_item_id" field in the mutation.
+func (m *MediaAssetMutation) PostItemID() (r uuid.UUID, exists bool) {
+	v := m.post_item
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPostItemID returns the old "post_item_id" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldPostItemID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPostItemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPostItemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPostItemID: %w", err)
+	}
+	return oldValue.PostItemID, nil
+}
+
+// ResetPostItemID resets all changes to the "post_item_id" field.
+func (m *MediaAssetMutation) ResetPostItemID() {
+	m.post_item = nil
+}
+
+// SetStorageKey sets the "storage_key" field.
+func (m *MediaAssetMutation) SetStorageKey(s string) {
+	m.storage_key = &s
+}
+
+// StorageKey returns the value of the "storage_key" field in the mutation.
+func (m *MediaAssetMutation) StorageKey() (r string, exists bool) {
+	v := m.storage_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStorageKey returns the old "storage_key" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldStorageKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStorageKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStorageKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStorageKey: %w", err)
+	}
+	return oldValue.StorageKey, nil
+}
+
+// ResetStorageKey resets all changes to the "storage_key" field.
+func (m *MediaAssetMutation) ResetStorageKey() {
+	m.storage_key = nil
+}
+
+// SetOriginalFilename sets the "original_filename" field.
+func (m *MediaAssetMutation) SetOriginalFilename(s string) {
+	m.original_filename = &s
+}
+
+// OriginalFilename returns the value of the "original_filename" field in the mutation.
+func (m *MediaAssetMutation) OriginalFilename() (r string, exists bool) {
+	v := m.original_filename
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalFilename returns the old "original_filename" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldOriginalFilename(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalFilename is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalFilename requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalFilename: %w", err)
+	}
+	return oldValue.OriginalFilename, nil
+}
+
+// ResetOriginalFilename resets all changes to the "original_filename" field.
+func (m *MediaAssetMutation) ResetOriginalFilename() {
+	m.original_filename = nil
+}
+
+// SetMimeType sets the "mime_type" field.
+func (m *MediaAssetMutation) SetMimeType(s string) {
+	m.mime_type = &s
+}
+
+// MimeType returns the value of the "mime_type" field in the mutation.
+func (m *MediaAssetMutation) MimeType() (r string, exists bool) {
+	v := m.mime_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMimeType returns the old "mime_type" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldMimeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMimeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMimeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMimeType: %w", err)
+	}
+	return oldValue.MimeType, nil
+}
+
+// ResetMimeType resets all changes to the "mime_type" field.
+func (m *MediaAssetMutation) ResetMimeType() {
+	m.mime_type = nil
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *MediaAssetMutation) SetSizeBytes(i int64) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *MediaAssetMutation) SizeBytes() (r int64, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldSizeBytes(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *MediaAssetMutation) AddSizeBytes(i int64) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *MediaAssetMutation) AddedSizeBytes() (r int64, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *MediaAssetMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetSha256Checksum sets the "sha256_checksum" field.
+func (m *MediaAssetMutation) SetSha256Checksum(b []byte) {
+	m.sha256_checksum = &b
+}
+
+// Sha256Checksum returns the value of the "sha256_checksum" field in the mutation.
+func (m *MediaAssetMutation) Sha256Checksum() (r []byte, exists bool) {
+	v := m.sha256_checksum
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSha256Checksum returns the old "sha256_checksum" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldSha256Checksum(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSha256Checksum is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSha256Checksum requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSha256Checksum: %w", err)
+	}
+	return oldValue.Sha256Checksum, nil
+}
+
+// ResetSha256Checksum resets all changes to the "sha256_checksum" field.
+func (m *MediaAssetMutation) ResetSha256Checksum() {
+	m.sha256_checksum = nil
+}
+
+// SetAltText sets the "alt_text" field.
+func (m *MediaAssetMutation) SetAltText(s string) {
+	m.alt_text = &s
+}
+
+// AltText returns the value of the "alt_text" field in the mutation.
+func (m *MediaAssetMutation) AltText() (r string, exists bool) {
+	v := m.alt_text
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAltText returns the old "alt_text" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldAltText(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAltText is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAltText requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAltText: %w", err)
+	}
+	return oldValue.AltText, nil
+}
+
+// ClearAltText clears the value of the "alt_text" field.
+func (m *MediaAssetMutation) ClearAltText() {
+	m.alt_text = nil
+	m.clearedFields[mediaasset.FieldAltText] = struct{}{}
+}
+
+// AltTextCleared returns if the "alt_text" field was cleared in this mutation.
+func (m *MediaAssetMutation) AltTextCleared() bool {
+	_, ok := m.clearedFields[mediaasset.FieldAltText]
+	return ok
+}
+
+// ResetAltText resets all changes to the "alt_text" field.
+func (m *MediaAssetMutation) ResetAltText() {
+	m.alt_text = nil
+	delete(m.clearedFields, mediaasset.FieldAltText)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *MediaAssetMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *MediaAssetMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *MediaAssetMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *MediaAssetMutation) ClearOwner() {
+	m.clearedowner = true
+	m.clearedFields[mediaasset.FieldOwnerID] = struct{}{}
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *MediaAssetMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *MediaAssetMutation) OwnerIDs() (ids []uuid.UUID) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *MediaAssetMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// ClearPostItem clears the "post_item" edge to the PostItem entity.
+func (m *MediaAssetMutation) ClearPostItem() {
+	m.clearedpost_item = true
+	m.clearedFields[mediaasset.FieldPostItemID] = struct{}{}
+}
+
+// PostItemCleared reports if the "post_item" edge to the PostItem entity was cleared.
+func (m *MediaAssetMutation) PostItemCleared() bool {
+	return m.clearedpost_item
+}
+
+// PostItemIDs returns the "post_item" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PostItemID instead. It exists only for internal usage by the builders.
+func (m *MediaAssetMutation) PostItemIDs() (ids []uuid.UUID) {
+	if id := m.post_item; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPostItem resets all changes to the "post_item" edge.
+func (m *MediaAssetMutation) ResetPostItem() {
+	m.post_item = nil
+	m.clearedpost_item = false
+}
+
+// Where appends a list predicates to the MediaAssetMutation builder.
+func (m *MediaAssetMutation) Where(ps ...predicate.MediaAsset) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MediaAssetMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MediaAssetMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MediaAsset, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MediaAssetMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MediaAssetMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MediaAsset).
+func (m *MediaAssetMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MediaAssetMutation) Fields() []string {
+	fields := make([]string, 0, 10)
+	if m.position != nil {
+		fields = append(fields, mediaasset.FieldPosition)
+	}
+	if m.owner != nil {
+		fields = append(fields, mediaasset.FieldOwnerID)
+	}
+	if m.post_item != nil {
+		fields = append(fields, mediaasset.FieldPostItemID)
+	}
+	if m.storage_key != nil {
+		fields = append(fields, mediaasset.FieldStorageKey)
+	}
+	if m.original_filename != nil {
+		fields = append(fields, mediaasset.FieldOriginalFilename)
+	}
+	if m.mime_type != nil {
+		fields = append(fields, mediaasset.FieldMimeType)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	if m.sha256_checksum != nil {
+		fields = append(fields, mediaasset.FieldSha256Checksum)
+	}
+	if m.alt_text != nil {
+		fields = append(fields, mediaasset.FieldAltText)
+	}
+	if m.created_at != nil {
+		fields = append(fields, mediaasset.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MediaAssetMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldPosition:
+		return m.Position()
+	case mediaasset.FieldOwnerID:
+		return m.OwnerID()
+	case mediaasset.FieldPostItemID:
+		return m.PostItemID()
+	case mediaasset.FieldStorageKey:
+		return m.StorageKey()
+	case mediaasset.FieldOriginalFilename:
+		return m.OriginalFilename()
+	case mediaasset.FieldMimeType:
+		return m.MimeType()
+	case mediaasset.FieldSizeBytes:
+		return m.SizeBytes()
+	case mediaasset.FieldSha256Checksum:
+		return m.Sha256Checksum()
+	case mediaasset.FieldAltText:
+		return m.AltText()
+	case mediaasset.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MediaAssetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mediaasset.FieldPosition:
+		return m.OldPosition(ctx)
+	case mediaasset.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case mediaasset.FieldPostItemID:
+		return m.OldPostItemID(ctx)
+	case mediaasset.FieldStorageKey:
+		return m.OldStorageKey(ctx)
+	case mediaasset.FieldOriginalFilename:
+		return m.OldOriginalFilename(ctx)
+	case mediaasset.FieldMimeType:
+		return m.OldMimeType(ctx)
+	case mediaasset.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case mediaasset.FieldSha256Checksum:
+		return m.OldSha256Checksum(ctx)
+	case mediaasset.FieldAltText:
+		return m.OldAltText(ctx)
+	case mediaasset.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPosition(v)
+		return nil
+	case mediaasset.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case mediaasset.FieldPostItemID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPostItemID(v)
+		return nil
+	case mediaasset.FieldStorageKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStorageKey(v)
+		return nil
+	case mediaasset.FieldOriginalFilename:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalFilename(v)
+		return nil
+	case mediaasset.FieldMimeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMimeType(v)
+		return nil
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case mediaasset.FieldSha256Checksum:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSha256Checksum(v)
+		return nil
+	case mediaasset.FieldAltText:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAltText(v)
+		return nil
+	case mediaasset.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MediaAssetMutation) AddedFields() []string {
+	var fields []string
+	if m.addposition != nil {
+		fields = append(fields, mediaasset.FieldPosition)
+	}
+	if m.addsize_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MediaAssetMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldPosition:
+		return m.AddedPosition()
+	case mediaasset.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPosition(v)
+		return nil
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MediaAssetMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(mediaasset.FieldAltText) {
+		fields = append(fields, mediaasset.FieldAltText)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MediaAssetMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ClearField(name string) error {
+	switch name {
+	case mediaasset.FieldAltText:
+		m.ClearAltText()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ResetField(name string) error {
+	switch name {
+	case mediaasset.FieldPosition:
+		m.ResetPosition()
+		return nil
+	case mediaasset.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case mediaasset.FieldPostItemID:
+		m.ResetPostItemID()
+		return nil
+	case mediaasset.FieldStorageKey:
+		m.ResetStorageKey()
+		return nil
+	case mediaasset.FieldOriginalFilename:
+		m.ResetOriginalFilename()
+		return nil
+	case mediaasset.FieldMimeType:
+		m.ResetMimeType()
+		return nil
+	case mediaasset.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case mediaasset.FieldSha256Checksum:
+		m.ResetSha256Checksum()
+		return nil
+	case mediaasset.FieldAltText:
+		m.ResetAltText()
+		return nil
+	case mediaasset.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MediaAssetMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.owner != nil {
+		edges = append(edges, mediaasset.EdgeOwner)
+	}
+	if m.post_item != nil {
+		edges = append(edges, mediaasset.EdgePostItem)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MediaAssetMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case mediaasset.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	case mediaasset.EdgePostItem:
+		if id := m.post_item; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MediaAssetMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MediaAssetMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MediaAssetMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedowner {
+		edges = append(edges, mediaasset.EdgeOwner)
+	}
+	if m.clearedpost_item {
+		edges = append(edges, mediaasset.EdgePostItem)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MediaAssetMutation) EdgeCleared(name string) bool {
+	switch name {
+	case mediaasset.EdgeOwner:
+		return m.clearedowner
+	case mediaasset.EdgePostItem:
+		return m.clearedpost_item
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MediaAssetMutation) ClearEdge(name string) error {
+	switch name {
+	case mediaasset.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	case mediaasset.EdgePostItem:
+		m.ClearPostItem()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MediaAssetMutation) ResetEdge(name string) error {
+	switch name {
+	case mediaasset.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case mediaasset.EdgePostItem:
+		m.ResetPostItem()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset edge %s", name)
+}
+
+// PostMutation represents an operation that mutates the Post nodes in the graph.
+type PostMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	creation_mode          *post.CreationMode
+	status                 *post.Status
+	scheduled_at           *time.Time
+	publish_requested_at   *time.Time
+	published_at           *time.Time
+	next_attempt_at        *time.Time
+	active_river_job_id    *int64
+	addactive_river_job_id *int64
+	attempt_count          *int
+	addattempt_count       *int
+	last_error_code        *string
+	last_error_message     *string
+	lease_token            *uuid.UUID
+	lease_owner            *string
+	lease_expires_at       *time.Time
+	lease_version          *int64
+	addlease_version       *int64
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	owner                  *uuid.UUID
+	clearedowner           bool
+	x_account              *uuid.UUID
+	clearedx_account       bool
+	items                  map[uuid.UUID]struct{}
+	removeditems           map[uuid.UUID]struct{}
+	cleareditems           bool
+	attempts               map[uuid.UUID]struct{}
+	removedattempts        map[uuid.UUID]struct{}
+	clearedattempts        bool
+	done                   bool
+	oldValue               func(context.Context) (*Post, error)
+	predicates             []predicate.Post
+}
+
+var _ ent.Mutation = (*PostMutation)(nil)
+
+// postOption allows management of the mutation configuration using functional options.
+type postOption func(*PostMutation)
+
+// newPostMutation creates new mutation for the Post entity.
+func newPostMutation(c config, op Op, opts ...postOption) *PostMutation {
+	m := &PostMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePost,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPostID sets the ID field of the mutation.
+func withPostID(id uuid.UUID) postOption {
+	return func(m *PostMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Post
+		)
+		m.oldValue = func(ctx context.Context) (*Post, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Post.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPost sets the old Post of the mutation.
+func withPost(node *Post) postOption {
+	return func(m *PostMutation) {
+		m.oldValue = func(context.Context) (*Post, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PostMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PostMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Post entities.
+func (m *PostMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PostMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PostMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Post.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreationMode sets the "creation_mode" field.
+func (m *PostMutation) SetCreationMode(pm post.CreationMode) {
+	m.creation_mode = &pm
+}
+
+// CreationMode returns the value of the "creation_mode" field in the mutation.
+func (m *PostMutation) CreationMode() (r post.CreationMode, exists bool) {
+	v := m.creation_mode
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreationMode returns the old "creation_mode" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldCreationMode(ctx context.Context) (v post.CreationMode, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreationMode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreationMode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreationMode: %w", err)
+	}
+	return oldValue.CreationMode, nil
+}
+
+// ResetCreationMode resets all changes to the "creation_mode" field.
+func (m *PostMutation) ResetCreationMode() {
+	m.creation_mode = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PostMutation) SetStatus(po post.Status) {
+	m.status = &po
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PostMutation) Status() (r post.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldStatus(ctx context.Context) (v post.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PostMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *PostMutation) SetOwnerID(u uuid.UUID) {
+	m.owner = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *PostMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *PostMutation) ResetOwnerID() {
+	m.owner = nil
+}
+
+// SetXAccountID sets the "x_account_id" field.
+func (m *PostMutation) SetXAccountID(u uuid.UUID) {
+	m.x_account = &u
+}
+
+// XAccountID returns the value of the "x_account_id" field in the mutation.
+func (m *PostMutation) XAccountID() (r uuid.UUID, exists bool) {
+	v := m.x_account
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldXAccountID returns the old "x_account_id" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldXAccountID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldXAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldXAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldXAccountID: %w", err)
+	}
+	return oldValue.XAccountID, nil
+}
+
+// ResetXAccountID resets all changes to the "x_account_id" field.
+func (m *PostMutation) ResetXAccountID() {
+	m.x_account = nil
+}
+
+// SetScheduledAt sets the "scheduled_at" field.
+func (m *PostMutation) SetScheduledAt(t time.Time) {
+	m.scheduled_at = &t
+}
+
+// ScheduledAt returns the value of the "scheduled_at" field in the mutation.
+func (m *PostMutation) ScheduledAt() (r time.Time, exists bool) {
+	v := m.scheduled_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScheduledAt returns the old "scheduled_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldScheduledAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScheduledAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScheduledAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScheduledAt: %w", err)
+	}
+	return oldValue.ScheduledAt, nil
+}
+
+// ClearScheduledAt clears the value of the "scheduled_at" field.
+func (m *PostMutation) ClearScheduledAt() {
+	m.scheduled_at = nil
+	m.clearedFields[post.FieldScheduledAt] = struct{}{}
+}
+
+// ScheduledAtCleared returns if the "scheduled_at" field was cleared in this mutation.
+func (m *PostMutation) ScheduledAtCleared() bool {
+	_, ok := m.clearedFields[post.FieldScheduledAt]
+	return ok
+}
+
+// ResetScheduledAt resets all changes to the "scheduled_at" field.
+func (m *PostMutation) ResetScheduledAt() {
+	m.scheduled_at = nil
+	delete(m.clearedFields, post.FieldScheduledAt)
+}
+
+// SetPublishRequestedAt sets the "publish_requested_at" field.
+func (m *PostMutation) SetPublishRequestedAt(t time.Time) {
+	m.publish_requested_at = &t
+}
+
+// PublishRequestedAt returns the value of the "publish_requested_at" field in the mutation.
+func (m *PostMutation) PublishRequestedAt() (r time.Time, exists bool) {
+	v := m.publish_requested_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishRequestedAt returns the old "publish_requested_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldPublishRequestedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishRequestedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishRequestedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishRequestedAt: %w", err)
+	}
+	return oldValue.PublishRequestedAt, nil
+}
+
+// ClearPublishRequestedAt clears the value of the "publish_requested_at" field.
+func (m *PostMutation) ClearPublishRequestedAt() {
+	m.publish_requested_at = nil
+	m.clearedFields[post.FieldPublishRequestedAt] = struct{}{}
+}
+
+// PublishRequestedAtCleared returns if the "publish_requested_at" field was cleared in this mutation.
+func (m *PostMutation) PublishRequestedAtCleared() bool {
+	_, ok := m.clearedFields[post.FieldPublishRequestedAt]
+	return ok
+}
+
+// ResetPublishRequestedAt resets all changes to the "publish_requested_at" field.
+func (m *PostMutation) ResetPublishRequestedAt() {
+	m.publish_requested_at = nil
+	delete(m.clearedFields, post.FieldPublishRequestedAt)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *PostMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *PostMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *PostMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[post.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *PostMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[post.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *PostMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, post.FieldPublishedAt)
+}
+
+// SetNextAttemptAt sets the "next_attempt_at" field.
+func (m *PostMutation) SetNextAttemptAt(t time.Time) {
+	m.next_attempt_at = &t
+}
+
+// NextAttemptAt returns the value of the "next_attempt_at" field in the mutation.
+func (m *PostMutation) NextAttemptAt() (r time.Time, exists bool) {
+	v := m.next_attempt_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextAttemptAt returns the old "next_attempt_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldNextAttemptAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextAttemptAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextAttemptAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextAttemptAt: %w", err)
+	}
+	return oldValue.NextAttemptAt, nil
+}
+
+// ClearNextAttemptAt clears the value of the "next_attempt_at" field.
+func (m *PostMutation) ClearNextAttemptAt() {
+	m.next_attempt_at = nil
+	m.clearedFields[post.FieldNextAttemptAt] = struct{}{}
+}
+
+// NextAttemptAtCleared returns if the "next_attempt_at" field was cleared in this mutation.
+func (m *PostMutation) NextAttemptAtCleared() bool {
+	_, ok := m.clearedFields[post.FieldNextAttemptAt]
+	return ok
+}
+
+// ResetNextAttemptAt resets all changes to the "next_attempt_at" field.
+func (m *PostMutation) ResetNextAttemptAt() {
+	m.next_attempt_at = nil
+	delete(m.clearedFields, post.FieldNextAttemptAt)
+}
+
+// SetActiveRiverJobID sets the "active_river_job_id" field.
+func (m *PostMutation) SetActiveRiverJobID(i int64) {
+	m.active_river_job_id = &i
+	m.addactive_river_job_id = nil
+}
+
+// ActiveRiverJobID returns the value of the "active_river_job_id" field in the mutation.
+func (m *PostMutation) ActiveRiverJobID() (r int64, exists bool) {
+	v := m.active_river_job_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActiveRiverJobID returns the old "active_river_job_id" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldActiveRiverJobID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActiveRiverJobID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActiveRiverJobID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActiveRiverJobID: %w", err)
+	}
+	return oldValue.ActiveRiverJobID, nil
+}
+
+// AddActiveRiverJobID adds i to the "active_river_job_id" field.
+func (m *PostMutation) AddActiveRiverJobID(i int64) {
+	if m.addactive_river_job_id != nil {
+		*m.addactive_river_job_id += i
+	} else {
+		m.addactive_river_job_id = &i
+	}
+}
+
+// AddedActiveRiverJobID returns the value that was added to the "active_river_job_id" field in this mutation.
+func (m *PostMutation) AddedActiveRiverJobID() (r int64, exists bool) {
+	v := m.addactive_river_job_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearActiveRiverJobID clears the value of the "active_river_job_id" field.
+func (m *PostMutation) ClearActiveRiverJobID() {
+	m.active_river_job_id = nil
+	m.addactive_river_job_id = nil
+	m.clearedFields[post.FieldActiveRiverJobID] = struct{}{}
+}
+
+// ActiveRiverJobIDCleared returns if the "active_river_job_id" field was cleared in this mutation.
+func (m *PostMutation) ActiveRiverJobIDCleared() bool {
+	_, ok := m.clearedFields[post.FieldActiveRiverJobID]
+	return ok
+}
+
+// ResetActiveRiverJobID resets all changes to the "active_river_job_id" field.
+func (m *PostMutation) ResetActiveRiverJobID() {
+	m.active_river_job_id = nil
+	m.addactive_river_job_id = nil
+	delete(m.clearedFields, post.FieldActiveRiverJobID)
+}
+
+// SetAttemptCount sets the "attempt_count" field.
+func (m *PostMutation) SetAttemptCount(i int) {
+	m.attempt_count = &i
+	m.addattempt_count = nil
+}
+
+// AttemptCount returns the value of the "attempt_count" field in the mutation.
+func (m *PostMutation) AttemptCount() (r int, exists bool) {
+	v := m.attempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptCount returns the old "attempt_count" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldAttemptCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptCount: %w", err)
+	}
+	return oldValue.AttemptCount, nil
+}
+
+// AddAttemptCount adds i to the "attempt_count" field.
+func (m *PostMutation) AddAttemptCount(i int) {
+	if m.addattempt_count != nil {
+		*m.addattempt_count += i
+	} else {
+		m.addattempt_count = &i
+	}
+}
+
+// AddedAttemptCount returns the value that was added to the "attempt_count" field in this mutation.
+func (m *PostMutation) AddedAttemptCount() (r int, exists bool) {
+	v := m.addattempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptCount resets all changes to the "attempt_count" field.
+func (m *PostMutation) ResetAttemptCount() {
+	m.attempt_count = nil
+	m.addattempt_count = nil
+}
+
+// SetLastErrorCode sets the "last_error_code" field.
+func (m *PostMutation) SetLastErrorCode(s string) {
+	m.last_error_code = &s
+}
+
+// LastErrorCode returns the value of the "last_error_code" field in the mutation.
+func (m *PostMutation) LastErrorCode() (r string, exists bool) {
+	v := m.last_error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastErrorCode returns the old "last_error_code" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLastErrorCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastErrorCode: %w", err)
+	}
+	return oldValue.LastErrorCode, nil
+}
+
+// ClearLastErrorCode clears the value of the "last_error_code" field.
+func (m *PostMutation) ClearLastErrorCode() {
+	m.last_error_code = nil
+	m.clearedFields[post.FieldLastErrorCode] = struct{}{}
+}
+
+// LastErrorCodeCleared returns if the "last_error_code" field was cleared in this mutation.
+func (m *PostMutation) LastErrorCodeCleared() bool {
+	_, ok := m.clearedFields[post.FieldLastErrorCode]
+	return ok
+}
+
+// ResetLastErrorCode resets all changes to the "last_error_code" field.
+func (m *PostMutation) ResetLastErrorCode() {
+	m.last_error_code = nil
+	delete(m.clearedFields, post.FieldLastErrorCode)
+}
+
+// SetLastErrorMessage sets the "last_error_message" field.
+func (m *PostMutation) SetLastErrorMessage(s string) {
+	m.last_error_message = &s
+}
+
+// LastErrorMessage returns the value of the "last_error_message" field in the mutation.
+func (m *PostMutation) LastErrorMessage() (r string, exists bool) {
+	v := m.last_error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastErrorMessage returns the old "last_error_message" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLastErrorMessage(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastErrorMessage: %w", err)
+	}
+	return oldValue.LastErrorMessage, nil
+}
+
+// ClearLastErrorMessage clears the value of the "last_error_message" field.
+func (m *PostMutation) ClearLastErrorMessage() {
+	m.last_error_message = nil
+	m.clearedFields[post.FieldLastErrorMessage] = struct{}{}
+}
+
+// LastErrorMessageCleared returns if the "last_error_message" field was cleared in this mutation.
+func (m *PostMutation) LastErrorMessageCleared() bool {
+	_, ok := m.clearedFields[post.FieldLastErrorMessage]
+	return ok
+}
+
+// ResetLastErrorMessage resets all changes to the "last_error_message" field.
+func (m *PostMutation) ResetLastErrorMessage() {
+	m.last_error_message = nil
+	delete(m.clearedFields, post.FieldLastErrorMessage)
+}
+
+// SetLeaseToken sets the "lease_token" field.
+func (m *PostMutation) SetLeaseToken(u uuid.UUID) {
+	m.lease_token = &u
+}
+
+// LeaseToken returns the value of the "lease_token" field in the mutation.
+func (m *PostMutation) LeaseToken() (r uuid.UUID, exists bool) {
+	v := m.lease_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseToken returns the old "lease_token" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLeaseToken(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseToken: %w", err)
+	}
+	return oldValue.LeaseToken, nil
+}
+
+// ClearLeaseToken clears the value of the "lease_token" field.
+func (m *PostMutation) ClearLeaseToken() {
+	m.lease_token = nil
+	m.clearedFields[post.FieldLeaseToken] = struct{}{}
+}
+
+// LeaseTokenCleared returns if the "lease_token" field was cleared in this mutation.
+func (m *PostMutation) LeaseTokenCleared() bool {
+	_, ok := m.clearedFields[post.FieldLeaseToken]
+	return ok
+}
+
+// ResetLeaseToken resets all changes to the "lease_token" field.
+func (m *PostMutation) ResetLeaseToken() {
+	m.lease_token = nil
+	delete(m.clearedFields, post.FieldLeaseToken)
+}
+
+// SetLeaseOwner sets the "lease_owner" field.
+func (m *PostMutation) SetLeaseOwner(s string) {
+	m.lease_owner = &s
+}
+
+// LeaseOwner returns the value of the "lease_owner" field in the mutation.
+func (m *PostMutation) LeaseOwner() (r string, exists bool) {
+	v := m.lease_owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseOwner returns the old "lease_owner" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLeaseOwner(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseOwner is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseOwner requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseOwner: %w", err)
+	}
+	return oldValue.LeaseOwner, nil
+}
+
+// ClearLeaseOwner clears the value of the "lease_owner" field.
+func (m *PostMutation) ClearLeaseOwner() {
+	m.lease_owner = nil
+	m.clearedFields[post.FieldLeaseOwner] = struct{}{}
+}
+
+// LeaseOwnerCleared returns if the "lease_owner" field was cleared in this mutation.
+func (m *PostMutation) LeaseOwnerCleared() bool {
+	_, ok := m.clearedFields[post.FieldLeaseOwner]
+	return ok
+}
+
+// ResetLeaseOwner resets all changes to the "lease_owner" field.
+func (m *PostMutation) ResetLeaseOwner() {
+	m.lease_owner = nil
+	delete(m.clearedFields, post.FieldLeaseOwner)
+}
+
+// SetLeaseExpiresAt sets the "lease_expires_at" field.
+func (m *PostMutation) SetLeaseExpiresAt(t time.Time) {
+	m.lease_expires_at = &t
+}
+
+// LeaseExpiresAt returns the value of the "lease_expires_at" field in the mutation.
+func (m *PostMutation) LeaseExpiresAt() (r time.Time, exists bool) {
+	v := m.lease_expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseExpiresAt returns the old "lease_expires_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLeaseExpiresAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseExpiresAt: %w", err)
+	}
+	return oldValue.LeaseExpiresAt, nil
+}
+
+// ClearLeaseExpiresAt clears the value of the "lease_expires_at" field.
+func (m *PostMutation) ClearLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	m.clearedFields[post.FieldLeaseExpiresAt] = struct{}{}
+}
+
+// LeaseExpiresAtCleared returns if the "lease_expires_at" field was cleared in this mutation.
+func (m *PostMutation) LeaseExpiresAtCleared() bool {
+	_, ok := m.clearedFields[post.FieldLeaseExpiresAt]
+	return ok
+}
+
+// ResetLeaseExpiresAt resets all changes to the "lease_expires_at" field.
+func (m *PostMutation) ResetLeaseExpiresAt() {
+	m.lease_expires_at = nil
+	delete(m.clearedFields, post.FieldLeaseExpiresAt)
+}
+
+// SetLeaseVersion sets the "lease_version" field.
+func (m *PostMutation) SetLeaseVersion(i int64) {
+	m.lease_version = &i
+	m.addlease_version = nil
+}
+
+// LeaseVersion returns the value of the "lease_version" field in the mutation.
+func (m *PostMutation) LeaseVersion() (r int64, exists bool) {
+	v := m.lease_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLeaseVersion returns the old "lease_version" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldLeaseVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLeaseVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLeaseVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLeaseVersion: %w", err)
+	}
+	return oldValue.LeaseVersion, nil
+}
+
+// AddLeaseVersion adds i to the "lease_version" field.
+func (m *PostMutation) AddLeaseVersion(i int64) {
+	if m.addlease_version != nil {
+		*m.addlease_version += i
+	} else {
+		m.addlease_version = &i
+	}
+}
+
+// AddedLeaseVersion returns the value that was added to the "lease_version" field in this mutation.
+func (m *PostMutation) AddedLeaseVersion() (r int64, exists bool) {
+	v := m.addlease_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLeaseVersion resets all changes to the "lease_version" field.
+func (m *PostMutation) ResetLeaseVersion() {
+	m.lease_version = nil
+	m.addlease_version = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PostMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PostMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PostMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PostMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PostMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PostMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *PostMutation) ClearOwner() {
+	m.clearedowner = true
+	m.clearedFields[post.FieldOwnerID] = struct{}{}
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *PostMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *PostMutation) OwnerIDs() (ids []uuid.UUID) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *PostMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// ClearXAccount clears the "x_account" edge to the XAccount entity.
+func (m *PostMutation) ClearXAccount() {
+	m.clearedx_account = true
+	m.clearedFields[post.FieldXAccountID] = struct{}{}
+}
+
+// XAccountCleared reports if the "x_account" edge to the XAccount entity was cleared.
+func (m *PostMutation) XAccountCleared() bool {
+	return m.clearedx_account
+}
+
+// XAccountIDs returns the "x_account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// XAccountID instead. It exists only for internal usage by the builders.
+func (m *PostMutation) XAccountIDs() (ids []uuid.UUID) {
+	if id := m.x_account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetXAccount resets all changes to the "x_account" edge.
+func (m *PostMutation) ResetXAccount() {
+	m.x_account = nil
+	m.clearedx_account = false
+}
+
+// AddItemIDs adds the "items" edge to the PostItem entity by ids.
+func (m *PostMutation) AddItemIDs(ids ...uuid.UUID) {
+	if m.items == nil {
+		m.items = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.items[ids[i]] = struct{}{}
+	}
+}
+
+// ClearItems clears the "items" edge to the PostItem entity.
+func (m *PostMutation) ClearItems() {
+	m.cleareditems = true
+}
+
+// ItemsCleared reports if the "items" edge to the PostItem entity was cleared.
+func (m *PostMutation) ItemsCleared() bool {
+	return m.cleareditems
+}
+
+// RemoveItemIDs removes the "items" edge to the PostItem entity by IDs.
+func (m *PostMutation) RemoveItemIDs(ids ...uuid.UUID) {
+	if m.removeditems == nil {
+		m.removeditems = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.items, ids[i])
+		m.removeditems[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedItems returns the removed IDs of the "items" edge to the PostItem entity.
+func (m *PostMutation) RemovedItemsIDs() (ids []uuid.UUID) {
+	for id := range m.removeditems {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ItemsIDs returns the "items" edge IDs in the mutation.
+func (m *PostMutation) ItemsIDs() (ids []uuid.UUID) {
+	for id := range m.items {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetItems resets all changes to the "items" edge.
+func (m *PostMutation) ResetItems() {
+	m.items = nil
+	m.cleareditems = false
+	m.removeditems = nil
+}
+
+// AddAttemptIDs adds the "attempts" edge to the PublicationAttempt entity by ids.
+func (m *PostMutation) AddAttemptIDs(ids ...uuid.UUID) {
+	if m.attempts == nil {
+		m.attempts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.attempts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAttempts clears the "attempts" edge to the PublicationAttempt entity.
+func (m *PostMutation) ClearAttempts() {
+	m.clearedattempts = true
+}
+
+// AttemptsCleared reports if the "attempts" edge to the PublicationAttempt entity was cleared.
+func (m *PostMutation) AttemptsCleared() bool {
+	return m.clearedattempts
+}
+
+// RemoveAttemptIDs removes the "attempts" edge to the PublicationAttempt entity by IDs.
+func (m *PostMutation) RemoveAttemptIDs(ids ...uuid.UUID) {
+	if m.removedattempts == nil {
+		m.removedattempts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.attempts, ids[i])
+		m.removedattempts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAttempts returns the removed IDs of the "attempts" edge to the PublicationAttempt entity.
+func (m *PostMutation) RemovedAttemptsIDs() (ids []uuid.UUID) {
+	for id := range m.removedattempts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AttemptsIDs returns the "attempts" edge IDs in the mutation.
+func (m *PostMutation) AttemptsIDs() (ids []uuid.UUID) {
+	for id := range m.attempts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAttempts resets all changes to the "attempts" edge.
+func (m *PostMutation) ResetAttempts() {
+	m.attempts = nil
+	m.clearedattempts = false
+	m.removedattempts = nil
+}
+
+// Where appends a list predicates to the PostMutation builder.
+func (m *PostMutation) Where(ps ...predicate.Post) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PostMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PostMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Post, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PostMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PostMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Post).
+func (m *PostMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PostMutation) Fields() []string {
+	fields := make([]string, 0, 18)
+	if m.creation_mode != nil {
+		fields = append(fields, post.FieldCreationMode)
+	}
+	if m.status != nil {
+		fields = append(fields, post.FieldStatus)
+	}
+	if m.owner != nil {
+		fields = append(fields, post.FieldOwnerID)
+	}
+	if m.x_account != nil {
+		fields = append(fields, post.FieldXAccountID)
+	}
+	if m.scheduled_at != nil {
+		fields = append(fields, post.FieldScheduledAt)
+	}
+	if m.publish_requested_at != nil {
+		fields = append(fields, post.FieldPublishRequestedAt)
+	}
+	if m.published_at != nil {
+		fields = append(fields, post.FieldPublishedAt)
+	}
+	if m.next_attempt_at != nil {
+		fields = append(fields, post.FieldNextAttemptAt)
+	}
+	if m.active_river_job_id != nil {
+		fields = append(fields, post.FieldActiveRiverJobID)
+	}
+	if m.attempt_count != nil {
+		fields = append(fields, post.FieldAttemptCount)
+	}
+	if m.last_error_code != nil {
+		fields = append(fields, post.FieldLastErrorCode)
+	}
+	if m.last_error_message != nil {
+		fields = append(fields, post.FieldLastErrorMessage)
+	}
+	if m.lease_token != nil {
+		fields = append(fields, post.FieldLeaseToken)
+	}
+	if m.lease_owner != nil {
+		fields = append(fields, post.FieldLeaseOwner)
+	}
+	if m.lease_expires_at != nil {
+		fields = append(fields, post.FieldLeaseExpiresAt)
+	}
+	if m.lease_version != nil {
+		fields = append(fields, post.FieldLeaseVersion)
+	}
+	if m.created_at != nil {
+		fields = append(fields, post.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, post.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PostMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case post.FieldCreationMode:
+		return m.CreationMode()
+	case post.FieldStatus:
+		return m.Status()
+	case post.FieldOwnerID:
+		return m.OwnerID()
+	case post.FieldXAccountID:
+		return m.XAccountID()
+	case post.FieldScheduledAt:
+		return m.ScheduledAt()
+	case post.FieldPublishRequestedAt:
+		return m.PublishRequestedAt()
+	case post.FieldPublishedAt:
+		return m.PublishedAt()
+	case post.FieldNextAttemptAt:
+		return m.NextAttemptAt()
+	case post.FieldActiveRiverJobID:
+		return m.ActiveRiverJobID()
+	case post.FieldAttemptCount:
+		return m.AttemptCount()
+	case post.FieldLastErrorCode:
+		return m.LastErrorCode()
+	case post.FieldLastErrorMessage:
+		return m.LastErrorMessage()
+	case post.FieldLeaseToken:
+		return m.LeaseToken()
+	case post.FieldLeaseOwner:
+		return m.LeaseOwner()
+	case post.FieldLeaseExpiresAt:
+		return m.LeaseExpiresAt()
+	case post.FieldLeaseVersion:
+		return m.LeaseVersion()
+	case post.FieldCreatedAt:
+		return m.CreatedAt()
+	case post.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PostMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case post.FieldCreationMode:
+		return m.OldCreationMode(ctx)
+	case post.FieldStatus:
+		return m.OldStatus(ctx)
+	case post.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case post.FieldXAccountID:
+		return m.OldXAccountID(ctx)
+	case post.FieldScheduledAt:
+		return m.OldScheduledAt(ctx)
+	case post.FieldPublishRequestedAt:
+		return m.OldPublishRequestedAt(ctx)
+	case post.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case post.FieldNextAttemptAt:
+		return m.OldNextAttemptAt(ctx)
+	case post.FieldActiveRiverJobID:
+		return m.OldActiveRiverJobID(ctx)
+	case post.FieldAttemptCount:
+		return m.OldAttemptCount(ctx)
+	case post.FieldLastErrorCode:
+		return m.OldLastErrorCode(ctx)
+	case post.FieldLastErrorMessage:
+		return m.OldLastErrorMessage(ctx)
+	case post.FieldLeaseToken:
+		return m.OldLeaseToken(ctx)
+	case post.FieldLeaseOwner:
+		return m.OldLeaseOwner(ctx)
+	case post.FieldLeaseExpiresAt:
+		return m.OldLeaseExpiresAt(ctx)
+	case post.FieldLeaseVersion:
+		return m.OldLeaseVersion(ctx)
+	case post.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case post.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown Post field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PostMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case post.FieldCreationMode:
+		v, ok := value.(post.CreationMode)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreationMode(v)
+		return nil
+	case post.FieldStatus:
+		v, ok := value.(post.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case post.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case post.FieldXAccountID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetXAccountID(v)
+		return nil
+	case post.FieldScheduledAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScheduledAt(v)
+		return nil
+	case post.FieldPublishRequestedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishRequestedAt(v)
+		return nil
+	case post.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case post.FieldNextAttemptAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextAttemptAt(v)
+		return nil
+	case post.FieldActiveRiverJobID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActiveRiverJobID(v)
+		return nil
+	case post.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptCount(v)
+		return nil
+	case post.FieldLastErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastErrorCode(v)
+		return nil
+	case post.FieldLastErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastErrorMessage(v)
+		return nil
+	case post.FieldLeaseToken:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseToken(v)
+		return nil
+	case post.FieldLeaseOwner:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseOwner(v)
+		return nil
+	case post.FieldLeaseExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseExpiresAt(v)
+		return nil
+	case post.FieldLeaseVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLeaseVersion(v)
+		return nil
+	case post.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case post.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Post field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PostMutation) AddedFields() []string {
+	var fields []string
+	if m.addactive_river_job_id != nil {
+		fields = append(fields, post.FieldActiveRiverJobID)
+	}
+	if m.addattempt_count != nil {
+		fields = append(fields, post.FieldAttemptCount)
+	}
+	if m.addlease_version != nil {
+		fields = append(fields, post.FieldLeaseVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PostMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case post.FieldActiveRiverJobID:
+		return m.AddedActiveRiverJobID()
+	case post.FieldAttemptCount:
+		return m.AddedAttemptCount()
+	case post.FieldLeaseVersion:
+		return m.AddedLeaseVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PostMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case post.FieldActiveRiverJobID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddActiveRiverJobID(v)
+		return nil
+	case post.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptCount(v)
+		return nil
+	case post.FieldLeaseVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLeaseVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Post numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PostMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(post.FieldScheduledAt) {
+		fields = append(fields, post.FieldScheduledAt)
+	}
+	if m.FieldCleared(post.FieldPublishRequestedAt) {
+		fields = append(fields, post.FieldPublishRequestedAt)
+	}
+	if m.FieldCleared(post.FieldPublishedAt) {
+		fields = append(fields, post.FieldPublishedAt)
+	}
+	if m.FieldCleared(post.FieldNextAttemptAt) {
+		fields = append(fields, post.FieldNextAttemptAt)
+	}
+	if m.FieldCleared(post.FieldActiveRiverJobID) {
+		fields = append(fields, post.FieldActiveRiverJobID)
+	}
+	if m.FieldCleared(post.FieldLastErrorCode) {
+		fields = append(fields, post.FieldLastErrorCode)
+	}
+	if m.FieldCleared(post.FieldLastErrorMessage) {
+		fields = append(fields, post.FieldLastErrorMessage)
+	}
+	if m.FieldCleared(post.FieldLeaseToken) {
+		fields = append(fields, post.FieldLeaseToken)
+	}
+	if m.FieldCleared(post.FieldLeaseOwner) {
+		fields = append(fields, post.FieldLeaseOwner)
+	}
+	if m.FieldCleared(post.FieldLeaseExpiresAt) {
+		fields = append(fields, post.FieldLeaseExpiresAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PostMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PostMutation) ClearField(name string) error {
+	switch name {
+	case post.FieldScheduledAt:
+		m.ClearScheduledAt()
+		return nil
+	case post.FieldPublishRequestedAt:
+		m.ClearPublishRequestedAt()
+		return nil
+	case post.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	case post.FieldNextAttemptAt:
+		m.ClearNextAttemptAt()
+		return nil
+	case post.FieldActiveRiverJobID:
+		m.ClearActiveRiverJobID()
+		return nil
+	case post.FieldLastErrorCode:
+		m.ClearLastErrorCode()
+		return nil
+	case post.FieldLastErrorMessage:
+		m.ClearLastErrorMessage()
+		return nil
+	case post.FieldLeaseToken:
+		m.ClearLeaseToken()
+		return nil
+	case post.FieldLeaseOwner:
+		m.ClearLeaseOwner()
+		return nil
+	case post.FieldLeaseExpiresAt:
+		m.ClearLeaseExpiresAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Post nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PostMutation) ResetField(name string) error {
+	switch name {
+	case post.FieldCreationMode:
+		m.ResetCreationMode()
+		return nil
+	case post.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case post.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case post.FieldXAccountID:
+		m.ResetXAccountID()
+		return nil
+	case post.FieldScheduledAt:
+		m.ResetScheduledAt()
+		return nil
+	case post.FieldPublishRequestedAt:
+		m.ResetPublishRequestedAt()
+		return nil
+	case post.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case post.FieldNextAttemptAt:
+		m.ResetNextAttemptAt()
+		return nil
+	case post.FieldActiveRiverJobID:
+		m.ResetActiveRiverJobID()
+		return nil
+	case post.FieldAttemptCount:
+		m.ResetAttemptCount()
+		return nil
+	case post.FieldLastErrorCode:
+		m.ResetLastErrorCode()
+		return nil
+	case post.FieldLastErrorMessage:
+		m.ResetLastErrorMessage()
+		return nil
+	case post.FieldLeaseToken:
+		m.ResetLeaseToken()
+		return nil
+	case post.FieldLeaseOwner:
+		m.ResetLeaseOwner()
+		return nil
+	case post.FieldLeaseExpiresAt:
+		m.ResetLeaseExpiresAt()
+		return nil
+	case post.FieldLeaseVersion:
+		m.ResetLeaseVersion()
+		return nil
+	case post.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case post.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Post field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PostMutation) AddedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.owner != nil {
+		edges = append(edges, post.EdgeOwner)
+	}
+	if m.x_account != nil {
+		edges = append(edges, post.EdgeXAccount)
+	}
+	if m.items != nil {
+		edges = append(edges, post.EdgeItems)
+	}
+	if m.attempts != nil {
+		edges = append(edges, post.EdgeAttempts)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PostMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case post.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	case post.EdgeXAccount:
+		if id := m.x_account; id != nil {
+			return []ent.Value{*id}
+		}
+	case post.EdgeItems:
+		ids := make([]ent.Value, 0, len(m.items))
+		for id := range m.items {
+			ids = append(ids, id)
+		}
+		return ids
+	case post.EdgeAttempts:
+		ids := make([]ent.Value, 0, len(m.attempts))
+		for id := range m.attempts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PostMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.removeditems != nil {
+		edges = append(edges, post.EdgeItems)
+	}
+	if m.removedattempts != nil {
+		edges = append(edges, post.EdgeAttempts)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PostMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case post.EdgeItems:
+		ids := make([]ent.Value, 0, len(m.removeditems))
+		for id := range m.removeditems {
+			ids = append(ids, id)
+		}
+		return ids
+	case post.EdgeAttempts:
+		ids := make([]ent.Value, 0, len(m.removedattempts))
+		for id := range m.removedattempts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PostMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.clearedowner {
+		edges = append(edges, post.EdgeOwner)
+	}
+	if m.clearedx_account {
+		edges = append(edges, post.EdgeXAccount)
+	}
+	if m.cleareditems {
+		edges = append(edges, post.EdgeItems)
+	}
+	if m.clearedattempts {
+		edges = append(edges, post.EdgeAttempts)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PostMutation) EdgeCleared(name string) bool {
+	switch name {
+	case post.EdgeOwner:
+		return m.clearedowner
+	case post.EdgeXAccount:
+		return m.clearedx_account
+	case post.EdgeItems:
+		return m.cleareditems
+	case post.EdgeAttempts:
+		return m.clearedattempts
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PostMutation) ClearEdge(name string) error {
+	switch name {
+	case post.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	case post.EdgeXAccount:
+		m.ClearXAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown Post unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PostMutation) ResetEdge(name string) error {
+	switch name {
+	case post.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case post.EdgeXAccount:
+		m.ResetXAccount()
+		return nil
+	case post.EdgeItems:
+		m.ResetItems()
+		return nil
+	case post.EdgeAttempts:
+		m.ResetAttempts()
+		return nil
+	}
+	return fmt.Errorf("unknown Post edge %s", name)
+}
+
+// PostItemMutation represents an operation that mutates the PostItem nodes in the graph.
+type PostItemMutation struct {
+	config
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	position            *int
+	addposition         *int
+	text                *string
+	x_post_id           *string
+	published_at        *time.Time
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	post                *uuid.UUID
+	clearedpost         bool
+	media_assets        map[uuid.UUID]struct{}
+	removedmedia_assets map[uuid.UUID]struct{}
+	clearedmedia_assets bool
+	done                bool
+	oldValue            func(context.Context) (*PostItem, error)
+	predicates          []predicate.PostItem
+}
+
+var _ ent.Mutation = (*PostItemMutation)(nil)
+
+// postitemOption allows management of the mutation configuration using functional options.
+type postitemOption func(*PostItemMutation)
+
+// newPostItemMutation creates new mutation for the PostItem entity.
+func newPostItemMutation(c config, op Op, opts ...postitemOption) *PostItemMutation {
+	m := &PostItemMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePostItem,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPostItemID sets the ID field of the mutation.
+func withPostItemID(id uuid.UUID) postitemOption {
+	return func(m *PostItemMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PostItem
+		)
+		m.oldValue = func(ctx context.Context) (*PostItem, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PostItem.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPostItem sets the old PostItem of the mutation.
+func withPostItem(node *PostItem) postitemOption {
+	return func(m *PostItemMutation) {
+		m.oldValue = func(context.Context) (*PostItem, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PostItemMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PostItemMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PostItem entities.
+func (m *PostItemMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PostItemMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PostItemMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PostItem.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetPosition sets the "position" field.
+func (m *PostItemMutation) SetPosition(i int) {
+	m.position = &i
+	m.addposition = nil
+}
+
+// Position returns the value of the "position" field in the mutation.
+func (m *PostItemMutation) Position() (r int, exists bool) {
+	v := m.position
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPosition returns the old "position" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldPosition(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPosition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPosition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPosition: %w", err)
+	}
+	return oldValue.Position, nil
+}
+
+// AddPosition adds i to the "position" field.
+func (m *PostItemMutation) AddPosition(i int) {
+	if m.addposition != nil {
+		*m.addposition += i
+	} else {
+		m.addposition = &i
+	}
+}
+
+// AddedPosition returns the value that was added to the "position" field in this mutation.
+func (m *PostItemMutation) AddedPosition() (r int, exists bool) {
+	v := m.addposition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPosition resets all changes to the "position" field.
+func (m *PostItemMutation) ResetPosition() {
+	m.position = nil
+	m.addposition = nil
+}
+
+// SetPostID sets the "post_id" field.
+func (m *PostItemMutation) SetPostID(u uuid.UUID) {
+	m.post = &u
+}
+
+// PostID returns the value of the "post_id" field in the mutation.
+func (m *PostItemMutation) PostID() (r uuid.UUID, exists bool) {
+	v := m.post
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPostID returns the old "post_id" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldPostID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPostID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPostID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPostID: %w", err)
+	}
+	return oldValue.PostID, nil
+}
+
+// ResetPostID resets all changes to the "post_id" field.
+func (m *PostItemMutation) ResetPostID() {
+	m.post = nil
+}
+
+// SetText sets the "text" field.
+func (m *PostItemMutation) SetText(s string) {
+	m.text = &s
+}
+
+// Text returns the value of the "text" field in the mutation.
+func (m *PostItemMutation) Text() (r string, exists bool) {
+	v := m.text
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldText returns the old "text" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldText(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldText is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldText requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldText: %w", err)
+	}
+	return oldValue.Text, nil
+}
+
+// ResetText resets all changes to the "text" field.
+func (m *PostItemMutation) ResetText() {
+	m.text = nil
+}
+
+// SetXPostID sets the "x_post_id" field.
+func (m *PostItemMutation) SetXPostID(s string) {
+	m.x_post_id = &s
+}
+
+// XPostID returns the value of the "x_post_id" field in the mutation.
+func (m *PostItemMutation) XPostID() (r string, exists bool) {
+	v := m.x_post_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldXPostID returns the old "x_post_id" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldXPostID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldXPostID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldXPostID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldXPostID: %w", err)
+	}
+	return oldValue.XPostID, nil
+}
+
+// ClearXPostID clears the value of the "x_post_id" field.
+func (m *PostItemMutation) ClearXPostID() {
+	m.x_post_id = nil
+	m.clearedFields[postitem.FieldXPostID] = struct{}{}
+}
+
+// XPostIDCleared returns if the "x_post_id" field was cleared in this mutation.
+func (m *PostItemMutation) XPostIDCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldXPostID]
+	return ok
+}
+
+// ResetXPostID resets all changes to the "x_post_id" field.
+func (m *PostItemMutation) ResetXPostID() {
+	m.x_post_id = nil
+	delete(m.clearedFields, postitem.FieldXPostID)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *PostItemMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *PostItemMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *PostItemMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[postitem.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *PostItemMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *PostItemMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, postitem.FieldPublishedAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PostItemMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PostItemMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PostItemMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PostItemMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PostItemMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PostItemMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearPost clears the "post" edge to the Post entity.
+func (m *PostItemMutation) ClearPost() {
+	m.clearedpost = true
+	m.clearedFields[postitem.FieldPostID] = struct{}{}
+}
+
+// PostCleared reports if the "post" edge to the Post entity was cleared.
+func (m *PostItemMutation) PostCleared() bool {
+	return m.clearedpost
+}
+
+// PostIDs returns the "post" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PostID instead. It exists only for internal usage by the builders.
+func (m *PostItemMutation) PostIDs() (ids []uuid.UUID) {
+	if id := m.post; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPost resets all changes to the "post" edge.
+func (m *PostItemMutation) ResetPost() {
+	m.post = nil
+	m.clearedpost = false
+}
+
+// AddMediaAssetIDs adds the "media_assets" edge to the MediaAsset entity by ids.
+func (m *PostItemMutation) AddMediaAssetIDs(ids ...uuid.UUID) {
+	if m.media_assets == nil {
+		m.media_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.media_assets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMediaAssets clears the "media_assets" edge to the MediaAsset entity.
+func (m *PostItemMutation) ClearMediaAssets() {
+	m.clearedmedia_assets = true
+}
+
+// MediaAssetsCleared reports if the "media_assets" edge to the MediaAsset entity was cleared.
+func (m *PostItemMutation) MediaAssetsCleared() bool {
+	return m.clearedmedia_assets
+}
+
+// RemoveMediaAssetIDs removes the "media_assets" edge to the MediaAsset entity by IDs.
+func (m *PostItemMutation) RemoveMediaAssetIDs(ids ...uuid.UUID) {
+	if m.removedmedia_assets == nil {
+		m.removedmedia_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.media_assets, ids[i])
+		m.removedmedia_assets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMediaAssets returns the removed IDs of the "media_assets" edge to the MediaAsset entity.
+func (m *PostItemMutation) RemovedMediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmedia_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MediaAssetsIDs returns the "media_assets" edge IDs in the mutation.
+func (m *PostItemMutation) MediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.media_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMediaAssets resets all changes to the "media_assets" edge.
+func (m *PostItemMutation) ResetMediaAssets() {
+	m.media_assets = nil
+	m.clearedmedia_assets = false
+	m.removedmedia_assets = nil
+}
+
+// Where appends a list predicates to the PostItemMutation builder.
+func (m *PostItemMutation) Where(ps ...predicate.PostItem) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PostItemMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PostItemMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PostItem, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PostItemMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PostItemMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PostItem).
+func (m *PostItemMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PostItemMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.position != nil {
+		fields = append(fields, postitem.FieldPosition)
+	}
+	if m.post != nil {
+		fields = append(fields, postitem.FieldPostID)
+	}
+	if m.text != nil {
+		fields = append(fields, postitem.FieldText)
+	}
+	if m.x_post_id != nil {
+		fields = append(fields, postitem.FieldXPostID)
+	}
+	if m.published_at != nil {
+		fields = append(fields, postitem.FieldPublishedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, postitem.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, postitem.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PostItemMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case postitem.FieldPosition:
+		return m.Position()
+	case postitem.FieldPostID:
+		return m.PostID()
+	case postitem.FieldText:
+		return m.Text()
+	case postitem.FieldXPostID:
+		return m.XPostID()
+	case postitem.FieldPublishedAt:
+		return m.PublishedAt()
+	case postitem.FieldCreatedAt:
+		return m.CreatedAt()
+	case postitem.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PostItemMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case postitem.FieldPosition:
+		return m.OldPosition(ctx)
+	case postitem.FieldPostID:
+		return m.OldPostID(ctx)
+	case postitem.FieldText:
+		return m.OldText(ctx)
+	case postitem.FieldXPostID:
+		return m.OldXPostID(ctx)
+	case postitem.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case postitem.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case postitem.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown PostItem field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PostItemMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case postitem.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPosition(v)
+		return nil
+	case postitem.FieldPostID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPostID(v)
+		return nil
+	case postitem.FieldText:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetText(v)
+		return nil
+	case postitem.FieldXPostID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetXPostID(v)
+		return nil
+	case postitem.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case postitem.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case postitem.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PostItemMutation) AddedFields() []string {
+	var fields []string
+	if m.addposition != nil {
+		fields = append(fields, postitem.FieldPosition)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PostItemMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case postitem.FieldPosition:
+		return m.AddedPosition()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PostItemMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case postitem.FieldPosition:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPosition(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PostItemMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(postitem.FieldXPostID) {
+		fields = append(fields, postitem.FieldXPostID)
+	}
+	if m.FieldCleared(postitem.FieldPublishedAt) {
+		fields = append(fields, postitem.FieldPublishedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PostItemMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PostItemMutation) ClearField(name string) error {
+	switch name {
+	case postitem.FieldXPostID:
+		m.ClearXPostID()
+		return nil
+	case postitem.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PostItemMutation) ResetField(name string) error {
+	switch name {
+	case postitem.FieldPosition:
+		m.ResetPosition()
+		return nil
+	case postitem.FieldPostID:
+		m.ResetPostID()
+		return nil
+	case postitem.FieldText:
+		m.ResetText()
+		return nil
+	case postitem.FieldXPostID:
+		m.ResetXPostID()
+		return nil
+	case postitem.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case postitem.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case postitem.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PostItemMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.post != nil {
+		edges = append(edges, postitem.EdgePost)
+	}
+	if m.media_assets != nil {
+		edges = append(edges, postitem.EdgeMediaAssets)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PostItemMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case postitem.EdgePost:
+		if id := m.post; id != nil {
+			return []ent.Value{*id}
+		}
+	case postitem.EdgeMediaAssets:
+		ids := make([]ent.Value, 0, len(m.media_assets))
+		for id := range m.media_assets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PostItemMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedmedia_assets != nil {
+		edges = append(edges, postitem.EdgeMediaAssets)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PostItemMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case postitem.EdgeMediaAssets:
+		ids := make([]ent.Value, 0, len(m.removedmedia_assets))
+		for id := range m.removedmedia_assets {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PostItemMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedpost {
+		edges = append(edges, postitem.EdgePost)
+	}
+	if m.clearedmedia_assets {
+		edges = append(edges, postitem.EdgeMediaAssets)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PostItemMutation) EdgeCleared(name string) bool {
+	switch name {
+	case postitem.EdgePost:
+		return m.clearedpost
+	case postitem.EdgeMediaAssets:
+		return m.clearedmedia_assets
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PostItemMutation) ClearEdge(name string) error {
+	switch name {
+	case postitem.EdgePost:
+		m.ClearPost()
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PostItemMutation) ResetEdge(name string) error {
+	switch name {
+	case postitem.EdgePost:
+		m.ResetPost()
+		return nil
+	case postitem.EdgeMediaAssets:
+		m.ResetMediaAssets()
+		return nil
+	}
+	return fmt.Errorf("unknown PostItem edge %s", name)
+}
+
+// PublicationAttemptMutation represents an operation that mutates the PublicationAttempt nodes in the graph.
+type PublicationAttemptMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	attempt_number    *int
+	addattempt_number *int
+	trigger           *publicationattempt.Trigger
+	outcome           *publicationattempt.Outcome
+	retryable         *bool
+	error_code        *string
+	error_message     *string
+	started_at        *time.Time
+	finished_at       *time.Time
+	clearedFields     map[string]struct{}
+	post              *uuid.UUID
+	clearedpost       bool
+	done              bool
+	oldValue          func(context.Context) (*PublicationAttempt, error)
+	predicates        []predicate.PublicationAttempt
+}
+
+var _ ent.Mutation = (*PublicationAttemptMutation)(nil)
+
+// publicationattemptOption allows management of the mutation configuration using functional options.
+type publicationattemptOption func(*PublicationAttemptMutation)
+
+// newPublicationAttemptMutation creates new mutation for the PublicationAttempt entity.
+func newPublicationAttemptMutation(c config, op Op, opts ...publicationattemptOption) *PublicationAttemptMutation {
+	m := &PublicationAttemptMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePublicationAttempt,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPublicationAttemptID sets the ID field of the mutation.
+func withPublicationAttemptID(id uuid.UUID) publicationattemptOption {
+	return func(m *PublicationAttemptMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PublicationAttempt
+		)
+		m.oldValue = func(ctx context.Context) (*PublicationAttempt, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PublicationAttempt.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPublicationAttempt sets the old PublicationAttempt of the mutation.
+func withPublicationAttempt(node *PublicationAttempt) publicationattemptOption {
+	return func(m *PublicationAttemptMutation) {
+		m.oldValue = func(context.Context) (*PublicationAttempt, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PublicationAttemptMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PublicationAttemptMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PublicationAttempt entities.
+func (m *PublicationAttemptMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PublicationAttemptMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PublicationAttemptMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PublicationAttempt.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetAttemptNumber sets the "attempt_number" field.
+func (m *PublicationAttemptMutation) SetAttemptNumber(i int) {
+	m.attempt_number = &i
+	m.addattempt_number = nil
+}
+
+// AttemptNumber returns the value of the "attempt_number" field in the mutation.
+func (m *PublicationAttemptMutation) AttemptNumber() (r int, exists bool) {
+	v := m.attempt_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptNumber returns the old "attempt_number" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldAttemptNumber(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptNumber: %w", err)
+	}
+	return oldValue.AttemptNumber, nil
+}
+
+// AddAttemptNumber adds i to the "attempt_number" field.
+func (m *PublicationAttemptMutation) AddAttemptNumber(i int) {
+	if m.addattempt_number != nil {
+		*m.addattempt_number += i
+	} else {
+		m.addattempt_number = &i
+	}
+}
+
+// AddedAttemptNumber returns the value that was added to the "attempt_number" field in this mutation.
+func (m *PublicationAttemptMutation) AddedAttemptNumber() (r int, exists bool) {
+	v := m.addattempt_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptNumber resets all changes to the "attempt_number" field.
+func (m *PublicationAttemptMutation) ResetAttemptNumber() {
+	m.attempt_number = nil
+	m.addattempt_number = nil
+}
+
+// SetPostID sets the "post_id" field.
+func (m *PublicationAttemptMutation) SetPostID(u uuid.UUID) {
+	m.post = &u
+}
+
+// PostID returns the value of the "post_id" field in the mutation.
+func (m *PublicationAttemptMutation) PostID() (r uuid.UUID, exists bool) {
+	v := m.post
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPostID returns the old "post_id" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldPostID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPostID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPostID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPostID: %w", err)
+	}
+	return oldValue.PostID, nil
+}
+
+// ResetPostID resets all changes to the "post_id" field.
+func (m *PublicationAttemptMutation) ResetPostID() {
+	m.post = nil
+}
+
+// SetTrigger sets the "trigger" field.
+func (m *PublicationAttemptMutation) SetTrigger(pu publicationattempt.Trigger) {
+	m.trigger = &pu
+}
+
+// Trigger returns the value of the "trigger" field in the mutation.
+func (m *PublicationAttemptMutation) Trigger() (r publicationattempt.Trigger, exists bool) {
+	v := m.trigger
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTrigger returns the old "trigger" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldTrigger(ctx context.Context) (v publicationattempt.Trigger, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTrigger is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTrigger requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTrigger: %w", err)
+	}
+	return oldValue.Trigger, nil
+}
+
+// ResetTrigger resets all changes to the "trigger" field.
+func (m *PublicationAttemptMutation) ResetTrigger() {
+	m.trigger = nil
+}
+
+// SetOutcome sets the "outcome" field.
+func (m *PublicationAttemptMutation) SetOutcome(pu publicationattempt.Outcome) {
+	m.outcome = &pu
+}
+
+// Outcome returns the value of the "outcome" field in the mutation.
+func (m *PublicationAttemptMutation) Outcome() (r publicationattempt.Outcome, exists bool) {
+	v := m.outcome
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcome returns the old "outcome" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldOutcome(ctx context.Context) (v publicationattempt.Outcome, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcome is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcome requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcome: %w", err)
+	}
+	return oldValue.Outcome, nil
+}
+
+// ResetOutcome resets all changes to the "outcome" field.
+func (m *PublicationAttemptMutation) ResetOutcome() {
+	m.outcome = nil
+}
+
+// SetRetryable sets the "retryable" field.
+func (m *PublicationAttemptMutation) SetRetryable(b bool) {
+	m.retryable = &b
+}
+
+// Retryable returns the value of the "retryable" field in the mutation.
+func (m *PublicationAttemptMutation) Retryable() (r bool, exists bool) {
+	v := m.retryable
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryable returns the old "retryable" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldRetryable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryable is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryable: %w", err)
+	}
+	return oldValue.Retryable, nil
+}
+
+// ResetRetryable resets all changes to the "retryable" field.
+func (m *PublicationAttemptMutation) ResetRetryable() {
+	m.retryable = nil
+}
+
+// SetErrorCode sets the "error_code" field.
+func (m *PublicationAttemptMutation) SetErrorCode(s string) {
+	m.error_code = &s
+}
+
+// ErrorCode returns the value of the "error_code" field in the mutation.
+func (m *PublicationAttemptMutation) ErrorCode() (r string, exists bool) {
+	v := m.error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorCode returns the old "error_code" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldErrorCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorCode: %w", err)
+	}
+	return oldValue.ErrorCode, nil
+}
+
+// ClearErrorCode clears the value of the "error_code" field.
+func (m *PublicationAttemptMutation) ClearErrorCode() {
+	m.error_code = nil
+	m.clearedFields[publicationattempt.FieldErrorCode] = struct{}{}
+}
+
+// ErrorCodeCleared returns if the "error_code" field was cleared in this mutation.
+func (m *PublicationAttemptMutation) ErrorCodeCleared() bool {
+	_, ok := m.clearedFields[publicationattempt.FieldErrorCode]
+	return ok
+}
+
+// ResetErrorCode resets all changes to the "error_code" field.
+func (m *PublicationAttemptMutation) ResetErrorCode() {
+	m.error_code = nil
+	delete(m.clearedFields, publicationattempt.FieldErrorCode)
+}
+
+// SetErrorMessage sets the "error_message" field.
+func (m *PublicationAttemptMutation) SetErrorMessage(s string) {
+	m.error_message = &s
+}
+
+// ErrorMessage returns the value of the "error_message" field in the mutation.
+func (m *PublicationAttemptMutation) ErrorMessage() (r string, exists bool) {
+	v := m.error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrorMessage returns the old "error_message" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldErrorMessage(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrorMessage: %w", err)
+	}
+	return oldValue.ErrorMessage, nil
+}
+
+// ClearErrorMessage clears the value of the "error_message" field.
+func (m *PublicationAttemptMutation) ClearErrorMessage() {
+	m.error_message = nil
+	m.clearedFields[publicationattempt.FieldErrorMessage] = struct{}{}
+}
+
+// ErrorMessageCleared returns if the "error_message" field was cleared in this mutation.
+func (m *PublicationAttemptMutation) ErrorMessageCleared() bool {
+	_, ok := m.clearedFields[publicationattempt.FieldErrorMessage]
+	return ok
+}
+
+// ResetErrorMessage resets all changes to the "error_message" field.
+func (m *PublicationAttemptMutation) ResetErrorMessage() {
+	m.error_message = nil
+	delete(m.clearedFields, publicationattempt.FieldErrorMessage)
+}
+
+// SetStartedAt sets the "started_at" field.
+func (m *PublicationAttemptMutation) SetStartedAt(t time.Time) {
+	m.started_at = &t
+}
+
+// StartedAt returns the value of the "started_at" field in the mutation.
+func (m *PublicationAttemptMutation) StartedAt() (r time.Time, exists bool) {
+	v := m.started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStartedAt returns the old "started_at" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldStartedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
+	}
+	return oldValue.StartedAt, nil
+}
+
+// ResetStartedAt resets all changes to the "started_at" field.
+func (m *PublicationAttemptMutation) ResetStartedAt() {
+	m.started_at = nil
+}
+
+// SetFinishedAt sets the "finished_at" field.
+func (m *PublicationAttemptMutation) SetFinishedAt(t time.Time) {
+	m.finished_at = &t
+}
+
+// FinishedAt returns the value of the "finished_at" field in the mutation.
+func (m *PublicationAttemptMutation) FinishedAt() (r time.Time, exists bool) {
+	v := m.finished_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFinishedAt returns the old "finished_at" field's value of the PublicationAttempt entity.
+// If the PublicationAttempt object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PublicationAttemptMutation) OldFinishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFinishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFinishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFinishedAt: %w", err)
+	}
+	return oldValue.FinishedAt, nil
+}
+
+// ClearFinishedAt clears the value of the "finished_at" field.
+func (m *PublicationAttemptMutation) ClearFinishedAt() {
+	m.finished_at = nil
+	m.clearedFields[publicationattempt.FieldFinishedAt] = struct{}{}
+}
+
+// FinishedAtCleared returns if the "finished_at" field was cleared in this mutation.
+func (m *PublicationAttemptMutation) FinishedAtCleared() bool {
+	_, ok := m.clearedFields[publicationattempt.FieldFinishedAt]
+	return ok
+}
+
+// ResetFinishedAt resets all changes to the "finished_at" field.
+func (m *PublicationAttemptMutation) ResetFinishedAt() {
+	m.finished_at = nil
+	delete(m.clearedFields, publicationattempt.FieldFinishedAt)
+}
+
+// ClearPost clears the "post" edge to the Post entity.
+func (m *PublicationAttemptMutation) ClearPost() {
+	m.clearedpost = true
+	m.clearedFields[publicationattempt.FieldPostID] = struct{}{}
+}
+
+// PostCleared reports if the "post" edge to the Post entity was cleared.
+func (m *PublicationAttemptMutation) PostCleared() bool {
+	return m.clearedpost
+}
+
+// PostIDs returns the "post" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PostID instead. It exists only for internal usage by the builders.
+func (m *PublicationAttemptMutation) PostIDs() (ids []uuid.UUID) {
+	if id := m.post; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetPost resets all changes to the "post" edge.
+func (m *PublicationAttemptMutation) ResetPost() {
+	m.post = nil
+	m.clearedpost = false
+}
+
+// Where appends a list predicates to the PublicationAttemptMutation builder.
+func (m *PublicationAttemptMutation) Where(ps ...predicate.PublicationAttempt) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PublicationAttemptMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PublicationAttemptMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PublicationAttempt, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PublicationAttemptMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PublicationAttemptMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PublicationAttempt).
+func (m *PublicationAttemptMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PublicationAttemptMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.attempt_number != nil {
+		fields = append(fields, publicationattempt.FieldAttemptNumber)
+	}
+	if m.post != nil {
+		fields = append(fields, publicationattempt.FieldPostID)
+	}
+	if m.trigger != nil {
+		fields = append(fields, publicationattempt.FieldTrigger)
+	}
+	if m.outcome != nil {
+		fields = append(fields, publicationattempt.FieldOutcome)
+	}
+	if m.retryable != nil {
+		fields = append(fields, publicationattempt.FieldRetryable)
+	}
+	if m.error_code != nil {
+		fields = append(fields, publicationattempt.FieldErrorCode)
+	}
+	if m.error_message != nil {
+		fields = append(fields, publicationattempt.FieldErrorMessage)
+	}
+	if m.started_at != nil {
+		fields = append(fields, publicationattempt.FieldStartedAt)
+	}
+	if m.finished_at != nil {
+		fields = append(fields, publicationattempt.FieldFinishedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PublicationAttemptMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		return m.AttemptNumber()
+	case publicationattempt.FieldPostID:
+		return m.PostID()
+	case publicationattempt.FieldTrigger:
+		return m.Trigger()
+	case publicationattempt.FieldOutcome:
+		return m.Outcome()
+	case publicationattempt.FieldRetryable:
+		return m.Retryable()
+	case publicationattempt.FieldErrorCode:
+		return m.ErrorCode()
+	case publicationattempt.FieldErrorMessage:
+		return m.ErrorMessage()
+	case publicationattempt.FieldStartedAt:
+		return m.StartedAt()
+	case publicationattempt.FieldFinishedAt:
+		return m.FinishedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PublicationAttemptMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		return m.OldAttemptNumber(ctx)
+	case publicationattempt.FieldPostID:
+		return m.OldPostID(ctx)
+	case publicationattempt.FieldTrigger:
+		return m.OldTrigger(ctx)
+	case publicationattempt.FieldOutcome:
+		return m.OldOutcome(ctx)
+	case publicationattempt.FieldRetryable:
+		return m.OldRetryable(ctx)
+	case publicationattempt.FieldErrorCode:
+		return m.OldErrorCode(ctx)
+	case publicationattempt.FieldErrorMessage:
+		return m.OldErrorMessage(ctx)
+	case publicationattempt.FieldStartedAt:
+		return m.OldStartedAt(ctx)
+	case publicationattempt.FieldFinishedAt:
+		return m.OldFinishedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown PublicationAttempt field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PublicationAttemptMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptNumber(v)
+		return nil
+	case publicationattempt.FieldPostID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPostID(v)
+		return nil
+	case publicationattempt.FieldTrigger:
+		v, ok := value.(publicationattempt.Trigger)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTrigger(v)
+		return nil
+	case publicationattempt.FieldOutcome:
+		v, ok := value.(publicationattempt.Outcome)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcome(v)
+		return nil
+	case publicationattempt.FieldRetryable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryable(v)
+		return nil
+	case publicationattempt.FieldErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorCode(v)
+		return nil
+	case publicationattempt.FieldErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrorMessage(v)
+		return nil
+	case publicationattempt.FieldStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStartedAt(v)
+		return nil
+	case publicationattempt.FieldFinishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFinishedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PublicationAttemptMutation) AddedFields() []string {
+	var fields []string
+	if m.addattempt_number != nil {
+		fields = append(fields, publicationattempt.FieldAttemptNumber)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PublicationAttemptMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		return m.AddedAttemptNumber()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PublicationAttemptMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptNumber(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PublicationAttemptMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(publicationattempt.FieldErrorCode) {
+		fields = append(fields, publicationattempt.FieldErrorCode)
+	}
+	if m.FieldCleared(publicationattempt.FieldErrorMessage) {
+		fields = append(fields, publicationattempt.FieldErrorMessage)
+	}
+	if m.FieldCleared(publicationattempt.FieldFinishedAt) {
+		fields = append(fields, publicationattempt.FieldFinishedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PublicationAttemptMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PublicationAttemptMutation) ClearField(name string) error {
+	switch name {
+	case publicationattempt.FieldErrorCode:
+		m.ClearErrorCode()
+		return nil
+	case publicationattempt.FieldErrorMessage:
+		m.ClearErrorMessage()
+		return nil
+	case publicationattempt.FieldFinishedAt:
+		m.ClearFinishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PublicationAttemptMutation) ResetField(name string) error {
+	switch name {
+	case publicationattempt.FieldAttemptNumber:
+		m.ResetAttemptNumber()
+		return nil
+	case publicationattempt.FieldPostID:
+		m.ResetPostID()
+		return nil
+	case publicationattempt.FieldTrigger:
+		m.ResetTrigger()
+		return nil
+	case publicationattempt.FieldOutcome:
+		m.ResetOutcome()
+		return nil
+	case publicationattempt.FieldRetryable:
+		m.ResetRetryable()
+		return nil
+	case publicationattempt.FieldErrorCode:
+		m.ResetErrorCode()
+		return nil
+	case publicationattempt.FieldErrorMessage:
+		m.ResetErrorMessage()
+		return nil
+	case publicationattempt.FieldStartedAt:
+		m.ResetStartedAt()
+		return nil
+	case publicationattempt.FieldFinishedAt:
+		m.ResetFinishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PublicationAttemptMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.post != nil {
+		edges = append(edges, publicationattempt.EdgePost)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PublicationAttemptMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case publicationattempt.EdgePost:
+		if id := m.post; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PublicationAttemptMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PublicationAttemptMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PublicationAttemptMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedpost {
+		edges = append(edges, publicationattempt.EdgePost)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PublicationAttemptMutation) EdgeCleared(name string) bool {
+	switch name {
+	case publicationattempt.EdgePost:
+		return m.clearedpost
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PublicationAttemptMutation) ClearEdge(name string) error {
+	switch name {
+	case publicationattempt.EdgePost:
+		m.ClearPost()
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PublicationAttemptMutation) ResetEdge(name string) error {
+	switch name {
+	case publicationattempt.EdgePost:
+		m.ResetPost()
+		return nil
+	}
+	return fmt.Errorf("unknown PublicationAttempt edge %s", name)
+}
 
 // SCSSessionMutation represents an operation that mutates the SCSSession nodes in the graph.
 type SCSSessionMutation struct {
@@ -418,23 +5037,781 @@ func (m *SCSSessionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown SCSSession edge %s", name)
 }
 
+// StorageDeletionMutation represents an operation that mutates the StorageDeletion nodes in the graph.
+type StorageDeletionMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	storage_key        *string
+	attempt_count      *int
+	addattempt_count   *int
+	next_attempt_at    *time.Time
+	last_error_code    *string
+	last_error_message *string
+	created_at         *time.Time
+	updated_at         *time.Time
+	clearedFields      map[string]struct{}
+	done               bool
+	oldValue           func(context.Context) (*StorageDeletion, error)
+	predicates         []predicate.StorageDeletion
+}
+
+var _ ent.Mutation = (*StorageDeletionMutation)(nil)
+
+// storagedeletionOption allows management of the mutation configuration using functional options.
+type storagedeletionOption func(*StorageDeletionMutation)
+
+// newStorageDeletionMutation creates new mutation for the StorageDeletion entity.
+func newStorageDeletionMutation(c config, op Op, opts ...storagedeletionOption) *StorageDeletionMutation {
+	m := &StorageDeletionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeStorageDeletion,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withStorageDeletionID sets the ID field of the mutation.
+func withStorageDeletionID(id uuid.UUID) storagedeletionOption {
+	return func(m *StorageDeletionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *StorageDeletion
+		)
+		m.oldValue = func(ctx context.Context) (*StorageDeletion, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().StorageDeletion.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withStorageDeletion sets the old StorageDeletion of the mutation.
+func withStorageDeletion(node *StorageDeletion) storagedeletionOption {
+	return func(m *StorageDeletionMutation) {
+		m.oldValue = func(context.Context) (*StorageDeletion, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m StorageDeletionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m StorageDeletionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of StorageDeletion entities.
+func (m *StorageDeletionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *StorageDeletionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *StorageDeletionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().StorageDeletion.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetStorageKey sets the "storage_key" field.
+func (m *StorageDeletionMutation) SetStorageKey(s string) {
+	m.storage_key = &s
+}
+
+// StorageKey returns the value of the "storage_key" field in the mutation.
+func (m *StorageDeletionMutation) StorageKey() (r string, exists bool) {
+	v := m.storage_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStorageKey returns the old "storage_key" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldStorageKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStorageKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStorageKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStorageKey: %w", err)
+	}
+	return oldValue.StorageKey, nil
+}
+
+// ResetStorageKey resets all changes to the "storage_key" field.
+func (m *StorageDeletionMutation) ResetStorageKey() {
+	m.storage_key = nil
+}
+
+// SetAttemptCount sets the "attempt_count" field.
+func (m *StorageDeletionMutation) SetAttemptCount(i int) {
+	m.attempt_count = &i
+	m.addattempt_count = nil
+}
+
+// AttemptCount returns the value of the "attempt_count" field in the mutation.
+func (m *StorageDeletionMutation) AttemptCount() (r int, exists bool) {
+	v := m.attempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptCount returns the old "attempt_count" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldAttemptCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptCount: %w", err)
+	}
+	return oldValue.AttemptCount, nil
+}
+
+// AddAttemptCount adds i to the "attempt_count" field.
+func (m *StorageDeletionMutation) AddAttemptCount(i int) {
+	if m.addattempt_count != nil {
+		*m.addattempt_count += i
+	} else {
+		m.addattempt_count = &i
+	}
+}
+
+// AddedAttemptCount returns the value that was added to the "attempt_count" field in this mutation.
+func (m *StorageDeletionMutation) AddedAttemptCount() (r int, exists bool) {
+	v := m.addattempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptCount resets all changes to the "attempt_count" field.
+func (m *StorageDeletionMutation) ResetAttemptCount() {
+	m.attempt_count = nil
+	m.addattempt_count = nil
+}
+
+// SetNextAttemptAt sets the "next_attempt_at" field.
+func (m *StorageDeletionMutation) SetNextAttemptAt(t time.Time) {
+	m.next_attempt_at = &t
+}
+
+// NextAttemptAt returns the value of the "next_attempt_at" field in the mutation.
+func (m *StorageDeletionMutation) NextAttemptAt() (r time.Time, exists bool) {
+	v := m.next_attempt_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNextAttemptAt returns the old "next_attempt_at" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldNextAttemptAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNextAttemptAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNextAttemptAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNextAttemptAt: %w", err)
+	}
+	return oldValue.NextAttemptAt, nil
+}
+
+// ClearNextAttemptAt clears the value of the "next_attempt_at" field.
+func (m *StorageDeletionMutation) ClearNextAttemptAt() {
+	m.next_attempt_at = nil
+	m.clearedFields[storagedeletion.FieldNextAttemptAt] = struct{}{}
+}
+
+// NextAttemptAtCleared returns if the "next_attempt_at" field was cleared in this mutation.
+func (m *StorageDeletionMutation) NextAttemptAtCleared() bool {
+	_, ok := m.clearedFields[storagedeletion.FieldNextAttemptAt]
+	return ok
+}
+
+// ResetNextAttemptAt resets all changes to the "next_attempt_at" field.
+func (m *StorageDeletionMutation) ResetNextAttemptAt() {
+	m.next_attempt_at = nil
+	delete(m.clearedFields, storagedeletion.FieldNextAttemptAt)
+}
+
+// SetLastErrorCode sets the "last_error_code" field.
+func (m *StorageDeletionMutation) SetLastErrorCode(s string) {
+	m.last_error_code = &s
+}
+
+// LastErrorCode returns the value of the "last_error_code" field in the mutation.
+func (m *StorageDeletionMutation) LastErrorCode() (r string, exists bool) {
+	v := m.last_error_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastErrorCode returns the old "last_error_code" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldLastErrorCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastErrorCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastErrorCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastErrorCode: %w", err)
+	}
+	return oldValue.LastErrorCode, nil
+}
+
+// ClearLastErrorCode clears the value of the "last_error_code" field.
+func (m *StorageDeletionMutation) ClearLastErrorCode() {
+	m.last_error_code = nil
+	m.clearedFields[storagedeletion.FieldLastErrorCode] = struct{}{}
+}
+
+// LastErrorCodeCleared returns if the "last_error_code" field was cleared in this mutation.
+func (m *StorageDeletionMutation) LastErrorCodeCleared() bool {
+	_, ok := m.clearedFields[storagedeletion.FieldLastErrorCode]
+	return ok
+}
+
+// ResetLastErrorCode resets all changes to the "last_error_code" field.
+func (m *StorageDeletionMutation) ResetLastErrorCode() {
+	m.last_error_code = nil
+	delete(m.clearedFields, storagedeletion.FieldLastErrorCode)
+}
+
+// SetLastErrorMessage sets the "last_error_message" field.
+func (m *StorageDeletionMutation) SetLastErrorMessage(s string) {
+	m.last_error_message = &s
+}
+
+// LastErrorMessage returns the value of the "last_error_message" field in the mutation.
+func (m *StorageDeletionMutation) LastErrorMessage() (r string, exists bool) {
+	v := m.last_error_message
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastErrorMessage returns the old "last_error_message" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldLastErrorMessage(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastErrorMessage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastErrorMessage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastErrorMessage: %w", err)
+	}
+	return oldValue.LastErrorMessage, nil
+}
+
+// ClearLastErrorMessage clears the value of the "last_error_message" field.
+func (m *StorageDeletionMutation) ClearLastErrorMessage() {
+	m.last_error_message = nil
+	m.clearedFields[storagedeletion.FieldLastErrorMessage] = struct{}{}
+}
+
+// LastErrorMessageCleared returns if the "last_error_message" field was cleared in this mutation.
+func (m *StorageDeletionMutation) LastErrorMessageCleared() bool {
+	_, ok := m.clearedFields[storagedeletion.FieldLastErrorMessage]
+	return ok
+}
+
+// ResetLastErrorMessage resets all changes to the "last_error_message" field.
+func (m *StorageDeletionMutation) ResetLastErrorMessage() {
+	m.last_error_message = nil
+	delete(m.clearedFields, storagedeletion.FieldLastErrorMessage)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *StorageDeletionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *StorageDeletionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *StorageDeletionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *StorageDeletionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *StorageDeletionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the StorageDeletion entity.
+// If the StorageDeletion object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StorageDeletionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *StorageDeletionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the StorageDeletionMutation builder.
+func (m *StorageDeletionMutation) Where(ps ...predicate.StorageDeletion) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the StorageDeletionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *StorageDeletionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.StorageDeletion, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *StorageDeletionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *StorageDeletionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (StorageDeletion).
+func (m *StorageDeletionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *StorageDeletionMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.storage_key != nil {
+		fields = append(fields, storagedeletion.FieldStorageKey)
+	}
+	if m.attempt_count != nil {
+		fields = append(fields, storagedeletion.FieldAttemptCount)
+	}
+	if m.next_attempt_at != nil {
+		fields = append(fields, storagedeletion.FieldNextAttemptAt)
+	}
+	if m.last_error_code != nil {
+		fields = append(fields, storagedeletion.FieldLastErrorCode)
+	}
+	if m.last_error_message != nil {
+		fields = append(fields, storagedeletion.FieldLastErrorMessage)
+	}
+	if m.created_at != nil {
+		fields = append(fields, storagedeletion.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, storagedeletion.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *StorageDeletionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case storagedeletion.FieldStorageKey:
+		return m.StorageKey()
+	case storagedeletion.FieldAttemptCount:
+		return m.AttemptCount()
+	case storagedeletion.FieldNextAttemptAt:
+		return m.NextAttemptAt()
+	case storagedeletion.FieldLastErrorCode:
+		return m.LastErrorCode()
+	case storagedeletion.FieldLastErrorMessage:
+		return m.LastErrorMessage()
+	case storagedeletion.FieldCreatedAt:
+		return m.CreatedAt()
+	case storagedeletion.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *StorageDeletionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case storagedeletion.FieldStorageKey:
+		return m.OldStorageKey(ctx)
+	case storagedeletion.FieldAttemptCount:
+		return m.OldAttemptCount(ctx)
+	case storagedeletion.FieldNextAttemptAt:
+		return m.OldNextAttemptAt(ctx)
+	case storagedeletion.FieldLastErrorCode:
+		return m.OldLastErrorCode(ctx)
+	case storagedeletion.FieldLastErrorMessage:
+		return m.OldLastErrorMessage(ctx)
+	case storagedeletion.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case storagedeletion.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown StorageDeletion field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StorageDeletionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case storagedeletion.FieldStorageKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStorageKey(v)
+		return nil
+	case storagedeletion.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptCount(v)
+		return nil
+	case storagedeletion.FieldNextAttemptAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNextAttemptAt(v)
+		return nil
+	case storagedeletion.FieldLastErrorCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastErrorCode(v)
+		return nil
+	case storagedeletion.FieldLastErrorMessage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastErrorMessage(v)
+		return nil
+	case storagedeletion.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case storagedeletion.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StorageDeletion field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *StorageDeletionMutation) AddedFields() []string {
+	var fields []string
+	if m.addattempt_count != nil {
+		fields = append(fields, storagedeletion.FieldAttemptCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *StorageDeletionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case storagedeletion.FieldAttemptCount:
+		return m.AddedAttemptCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StorageDeletionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case storagedeletion.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StorageDeletion numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *StorageDeletionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(storagedeletion.FieldNextAttemptAt) {
+		fields = append(fields, storagedeletion.FieldNextAttemptAt)
+	}
+	if m.FieldCleared(storagedeletion.FieldLastErrorCode) {
+		fields = append(fields, storagedeletion.FieldLastErrorCode)
+	}
+	if m.FieldCleared(storagedeletion.FieldLastErrorMessage) {
+		fields = append(fields, storagedeletion.FieldLastErrorMessage)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *StorageDeletionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *StorageDeletionMutation) ClearField(name string) error {
+	switch name {
+	case storagedeletion.FieldNextAttemptAt:
+		m.ClearNextAttemptAt()
+		return nil
+	case storagedeletion.FieldLastErrorCode:
+		m.ClearLastErrorCode()
+		return nil
+	case storagedeletion.FieldLastErrorMessage:
+		m.ClearLastErrorMessage()
+		return nil
+	}
+	return fmt.Errorf("unknown StorageDeletion nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *StorageDeletionMutation) ResetField(name string) error {
+	switch name {
+	case storagedeletion.FieldStorageKey:
+		m.ResetStorageKey()
+		return nil
+	case storagedeletion.FieldAttemptCount:
+		m.ResetAttemptCount()
+		return nil
+	case storagedeletion.FieldNextAttemptAt:
+		m.ResetNextAttemptAt()
+		return nil
+	case storagedeletion.FieldLastErrorCode:
+		m.ResetLastErrorCode()
+		return nil
+	case storagedeletion.FieldLastErrorMessage:
+		m.ResetLastErrorMessage()
+		return nil
+	case storagedeletion.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case storagedeletion.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown StorageDeletion field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *StorageDeletionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *StorageDeletionMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *StorageDeletionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *StorageDeletionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *StorageDeletionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *StorageDeletionMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *StorageDeletionMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown StorageDeletion unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *StorageDeletionMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown StorageDeletion edge %s", name)
+}
+
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *uuid.UUID
-	email             *string
-	password_hash     *string
-	created_at        *time.Time
-	updated_at        *time.Time
-	clearedFields     map[string]struct{}
-	x_accounts        map[uuid.UUID]struct{}
-	removedx_accounts map[uuid.UUID]struct{}
-	clearedx_accounts bool
-	done              bool
-	oldValue          func(context.Context) (*User, error)
-	predicates        []predicate.User
+	op                  Op
+	typ                 string
+	id                  *uuid.UUID
+	email               *string
+	password_hash       *string
+	created_at          *time.Time
+	updated_at          *time.Time
+	clearedFields       map[string]struct{}
+	x_accounts          map[uuid.UUID]struct{}
+	removedx_accounts   map[uuid.UUID]struct{}
+	clearedx_accounts   bool
+	posts               map[uuid.UUID]struct{}
+	removedposts        map[uuid.UUID]struct{}
+	clearedposts        bool
+	media_assets        map[uuid.UUID]struct{}
+	removedmedia_assets map[uuid.UUID]struct{}
+	clearedmedia_assets bool
+	done                bool
+	oldValue            func(context.Context) (*User, error)
+	predicates          []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -739,6 +6116,114 @@ func (m *UserMutation) ResetXAccounts() {
 	m.removedx_accounts = nil
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by ids.
+func (m *UserMutation) AddPostIDs(ids ...uuid.UUID) {
+	if m.posts == nil {
+		m.posts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.posts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPosts clears the "posts" edge to the Post entity.
+func (m *UserMutation) ClearPosts() {
+	m.clearedposts = true
+}
+
+// PostsCleared reports if the "posts" edge to the Post entity was cleared.
+func (m *UserMutation) PostsCleared() bool {
+	return m.clearedposts
+}
+
+// RemovePostIDs removes the "posts" edge to the Post entity by IDs.
+func (m *UserMutation) RemovePostIDs(ids ...uuid.UUID) {
+	if m.removedposts == nil {
+		m.removedposts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.posts, ids[i])
+		m.removedposts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPosts returns the removed IDs of the "posts" edge to the Post entity.
+func (m *UserMutation) RemovedPostsIDs() (ids []uuid.UUID) {
+	for id := range m.removedposts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PostsIDs returns the "posts" edge IDs in the mutation.
+func (m *UserMutation) PostsIDs() (ids []uuid.UUID) {
+	for id := range m.posts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPosts resets all changes to the "posts" edge.
+func (m *UserMutation) ResetPosts() {
+	m.posts = nil
+	m.clearedposts = false
+	m.removedposts = nil
+}
+
+// AddMediaAssetIDs adds the "media_assets" edge to the MediaAsset entity by ids.
+func (m *UserMutation) AddMediaAssetIDs(ids ...uuid.UUID) {
+	if m.media_assets == nil {
+		m.media_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.media_assets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMediaAssets clears the "media_assets" edge to the MediaAsset entity.
+func (m *UserMutation) ClearMediaAssets() {
+	m.clearedmedia_assets = true
+}
+
+// MediaAssetsCleared reports if the "media_assets" edge to the MediaAsset entity was cleared.
+func (m *UserMutation) MediaAssetsCleared() bool {
+	return m.clearedmedia_assets
+}
+
+// RemoveMediaAssetIDs removes the "media_assets" edge to the MediaAsset entity by IDs.
+func (m *UserMutation) RemoveMediaAssetIDs(ids ...uuid.UUID) {
+	if m.removedmedia_assets == nil {
+		m.removedmedia_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.media_assets, ids[i])
+		m.removedmedia_assets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMediaAssets returns the removed IDs of the "media_assets" edge to the MediaAsset entity.
+func (m *UserMutation) RemovedMediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmedia_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MediaAssetsIDs returns the "media_assets" edge IDs in the mutation.
+func (m *UserMutation) MediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.media_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMediaAssets resets all changes to the "media_assets" edge.
+func (m *UserMutation) ResetMediaAssets() {
+	m.media_assets = nil
+	m.clearedmedia_assets = false
+	m.removedmedia_assets = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -923,9 +6408,15 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.x_accounts != nil {
 		edges = append(edges, user.EdgeXAccounts)
+	}
+	if m.posts != nil {
+		edges = append(edges, user.EdgePosts)
+	}
+	if m.media_assets != nil {
+		edges = append(edges, user.EdgeMediaAssets)
 	}
 	return edges
 }
@@ -940,15 +6431,33 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.posts))
+		for id := range m.posts {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeMediaAssets:
+		ids := make([]ent.Value, 0, len(m.media_assets))
+		for id := range m.media_assets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.removedx_accounts != nil {
 		edges = append(edges, user.EdgeXAccounts)
+	}
+	if m.removedposts != nil {
+		edges = append(edges, user.EdgePosts)
+	}
+	if m.removedmedia_assets != nil {
+		edges = append(edges, user.EdgeMediaAssets)
 	}
 	return edges
 }
@@ -963,15 +6472,33 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.removedposts))
+		for id := range m.removedposts {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeMediaAssets:
+		ids := make([]ent.Value, 0, len(m.removedmedia_assets))
+		for id := range m.removedmedia_assets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 3)
 	if m.clearedx_accounts {
 		edges = append(edges, user.EdgeXAccounts)
+	}
+	if m.clearedposts {
+		edges = append(edges, user.EdgePosts)
+	}
+	if m.clearedmedia_assets {
+		edges = append(edges, user.EdgeMediaAssets)
 	}
 	return edges
 }
@@ -982,6 +6509,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeXAccounts:
 		return m.clearedx_accounts
+	case user.EdgePosts:
+		return m.clearedposts
+	case user.EdgeMediaAssets:
+		return m.clearedmedia_assets
 	}
 	return false
 }
@@ -1001,6 +6532,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 	case user.EdgeXAccounts:
 		m.ResetXAccounts()
 		return nil
+	case user.EdgePosts:
+		m.ResetPosts()
+		return nil
+	case user.EdgeMediaAssets:
+		m.ResetMediaAssets()
+		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
 }
@@ -1008,26 +6545,32 @@ func (m *UserMutation) ResetEdge(name string) error {
 // XAccountMutation represents an operation that mutates the XAccount nodes in the graph.
 type XAccountMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *uuid.UUID
-	x_user_id         *string
-	username          *string
-	display_name      *string
-	profile_image_url *string
-	access_token      *[]byte
-	refresh_token     *[]byte
-	token_expiry      *time.Time
-	scopes            *[]string
-	appendscopes      []string
-	created_at        *time.Time
-	updated_at        *time.Time
-	clearedFields     map[string]struct{}
-	owner             *uuid.UUID
-	clearedowner      bool
-	done              bool
-	oldValue          func(context.Context) (*XAccount, error)
-	predicates        []predicate.XAccount
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	x_user_id               *string
+	username                *string
+	display_name            *string
+	profile_image_url       *string
+	access_token            *[]byte
+	refresh_token           *[]byte
+	token_expiry            *time.Time
+	scopes                  *[]string
+	appendscopes            []string
+	rate_limit_remaining    *int
+	addrate_limit_remaining *int
+	rate_limit_reset_at     *time.Time
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	owner                   *uuid.UUID
+	clearedowner            bool
+	posts                   map[uuid.UUID]struct{}
+	removedposts            map[uuid.UUID]struct{}
+	clearedposts            bool
+	done                    bool
+	oldValue                func(context.Context) (*XAccount, error)
+	predicates              []predicate.XAccount
 }
 
 var _ ent.Mutation = (*XAccountMutation)(nil)
@@ -1463,6 +7006,125 @@ func (m *XAccountMutation) ResetScopes() {
 	m.appendscopes = nil
 }
 
+// SetRateLimitRemaining sets the "rate_limit_remaining" field.
+func (m *XAccountMutation) SetRateLimitRemaining(i int) {
+	m.rate_limit_remaining = &i
+	m.addrate_limit_remaining = nil
+}
+
+// RateLimitRemaining returns the value of the "rate_limit_remaining" field in the mutation.
+func (m *XAccountMutation) RateLimitRemaining() (r int, exists bool) {
+	v := m.rate_limit_remaining
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRateLimitRemaining returns the old "rate_limit_remaining" field's value of the XAccount entity.
+// If the XAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *XAccountMutation) OldRateLimitRemaining(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRateLimitRemaining is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRateLimitRemaining requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRateLimitRemaining: %w", err)
+	}
+	return oldValue.RateLimitRemaining, nil
+}
+
+// AddRateLimitRemaining adds i to the "rate_limit_remaining" field.
+func (m *XAccountMutation) AddRateLimitRemaining(i int) {
+	if m.addrate_limit_remaining != nil {
+		*m.addrate_limit_remaining += i
+	} else {
+		m.addrate_limit_remaining = &i
+	}
+}
+
+// AddedRateLimitRemaining returns the value that was added to the "rate_limit_remaining" field in this mutation.
+func (m *XAccountMutation) AddedRateLimitRemaining() (r int, exists bool) {
+	v := m.addrate_limit_remaining
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearRateLimitRemaining clears the value of the "rate_limit_remaining" field.
+func (m *XAccountMutation) ClearRateLimitRemaining() {
+	m.rate_limit_remaining = nil
+	m.addrate_limit_remaining = nil
+	m.clearedFields[xaccount.FieldRateLimitRemaining] = struct{}{}
+}
+
+// RateLimitRemainingCleared returns if the "rate_limit_remaining" field was cleared in this mutation.
+func (m *XAccountMutation) RateLimitRemainingCleared() bool {
+	_, ok := m.clearedFields[xaccount.FieldRateLimitRemaining]
+	return ok
+}
+
+// ResetRateLimitRemaining resets all changes to the "rate_limit_remaining" field.
+func (m *XAccountMutation) ResetRateLimitRemaining() {
+	m.rate_limit_remaining = nil
+	m.addrate_limit_remaining = nil
+	delete(m.clearedFields, xaccount.FieldRateLimitRemaining)
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (m *XAccountMutation) SetRateLimitResetAt(t time.Time) {
+	m.rate_limit_reset_at = &t
+}
+
+// RateLimitResetAt returns the value of the "rate_limit_reset_at" field in the mutation.
+func (m *XAccountMutation) RateLimitResetAt() (r time.Time, exists bool) {
+	v := m.rate_limit_reset_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRateLimitResetAt returns the old "rate_limit_reset_at" field's value of the XAccount entity.
+// If the XAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *XAccountMutation) OldRateLimitResetAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRateLimitResetAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRateLimitResetAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRateLimitResetAt: %w", err)
+	}
+	return oldValue.RateLimitResetAt, nil
+}
+
+// ClearRateLimitResetAt clears the value of the "rate_limit_reset_at" field.
+func (m *XAccountMutation) ClearRateLimitResetAt() {
+	m.rate_limit_reset_at = nil
+	m.clearedFields[xaccount.FieldRateLimitResetAt] = struct{}{}
+}
+
+// RateLimitResetAtCleared returns if the "rate_limit_reset_at" field was cleared in this mutation.
+func (m *XAccountMutation) RateLimitResetAtCleared() bool {
+	_, ok := m.clearedFields[xaccount.FieldRateLimitResetAt]
+	return ok
+}
+
+// ResetRateLimitResetAt resets all changes to the "rate_limit_reset_at" field.
+func (m *XAccountMutation) ResetRateLimitResetAt() {
+	m.rate_limit_reset_at = nil
+	delete(m.clearedFields, xaccount.FieldRateLimitResetAt)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *XAccountMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -1574,6 +7236,60 @@ func (m *XAccountMutation) ResetOwner() {
 	m.clearedowner = false
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by ids.
+func (m *XAccountMutation) AddPostIDs(ids ...uuid.UUID) {
+	if m.posts == nil {
+		m.posts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.posts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPosts clears the "posts" edge to the Post entity.
+func (m *XAccountMutation) ClearPosts() {
+	m.clearedposts = true
+}
+
+// PostsCleared reports if the "posts" edge to the Post entity was cleared.
+func (m *XAccountMutation) PostsCleared() bool {
+	return m.clearedposts
+}
+
+// RemovePostIDs removes the "posts" edge to the Post entity by IDs.
+func (m *XAccountMutation) RemovePostIDs(ids ...uuid.UUID) {
+	if m.removedposts == nil {
+		m.removedposts = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.posts, ids[i])
+		m.removedposts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPosts returns the removed IDs of the "posts" edge to the Post entity.
+func (m *XAccountMutation) RemovedPostsIDs() (ids []uuid.UUID) {
+	for id := range m.removedposts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PostsIDs returns the "posts" edge IDs in the mutation.
+func (m *XAccountMutation) PostsIDs() (ids []uuid.UUID) {
+	for id := range m.posts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPosts resets all changes to the "posts" edge.
+func (m *XAccountMutation) ResetPosts() {
+	m.posts = nil
+	m.clearedposts = false
+	m.removedposts = nil
+}
+
 // Where appends a list predicates to the XAccountMutation builder.
 func (m *XAccountMutation) Where(ps ...predicate.XAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -1608,7 +7324,7 @@ func (m *XAccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *XAccountMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 12)
 	if m.x_user_id != nil {
 		fields = append(fields, xaccount.FieldXUserID)
 	}
@@ -1632,6 +7348,12 @@ func (m *XAccountMutation) Fields() []string {
 	}
 	if m.scopes != nil {
 		fields = append(fields, xaccount.FieldScopes)
+	}
+	if m.rate_limit_remaining != nil {
+		fields = append(fields, xaccount.FieldRateLimitRemaining)
+	}
+	if m.rate_limit_reset_at != nil {
+		fields = append(fields, xaccount.FieldRateLimitResetAt)
 	}
 	if m.created_at != nil {
 		fields = append(fields, xaccount.FieldCreatedAt)
@@ -1663,6 +7385,10 @@ func (m *XAccountMutation) Field(name string) (ent.Value, bool) {
 		return m.TokenExpiry()
 	case xaccount.FieldScopes:
 		return m.Scopes()
+	case xaccount.FieldRateLimitRemaining:
+		return m.RateLimitRemaining()
+	case xaccount.FieldRateLimitResetAt:
+		return m.RateLimitResetAt()
 	case xaccount.FieldCreatedAt:
 		return m.CreatedAt()
 	case xaccount.FieldUpdatedAt:
@@ -1692,6 +7418,10 @@ func (m *XAccountMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldTokenExpiry(ctx)
 	case xaccount.FieldScopes:
 		return m.OldScopes(ctx)
+	case xaccount.FieldRateLimitRemaining:
+		return m.OldRateLimitRemaining(ctx)
+	case xaccount.FieldRateLimitResetAt:
+		return m.OldRateLimitResetAt(ctx)
 	case xaccount.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case xaccount.FieldUpdatedAt:
@@ -1761,6 +7491,20 @@ func (m *XAccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetScopes(v)
 		return nil
+	case xaccount.FieldRateLimitRemaining:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRateLimitRemaining(v)
+		return nil
+	case xaccount.FieldRateLimitResetAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRateLimitResetAt(v)
+		return nil
 	case xaccount.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -1782,13 +7526,21 @@ func (m *XAccountMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *XAccountMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addrate_limit_remaining != nil {
+		fields = append(fields, xaccount.FieldRateLimitRemaining)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *XAccountMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case xaccount.FieldRateLimitRemaining:
+		return m.AddedRateLimitRemaining()
+	}
 	return nil, false
 }
 
@@ -1797,6 +7549,13 @@ func (m *XAccountMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *XAccountMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case xaccount.FieldRateLimitRemaining:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRateLimitRemaining(v)
+		return nil
 	}
 	return fmt.Errorf("unknown XAccount numeric field %s", name)
 }
@@ -1810,6 +7569,12 @@ func (m *XAccountMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(xaccount.FieldRefreshToken) {
 		fields = append(fields, xaccount.FieldRefreshToken)
+	}
+	if m.FieldCleared(xaccount.FieldRateLimitRemaining) {
+		fields = append(fields, xaccount.FieldRateLimitRemaining)
+	}
+	if m.FieldCleared(xaccount.FieldRateLimitResetAt) {
+		fields = append(fields, xaccount.FieldRateLimitResetAt)
 	}
 	return fields
 }
@@ -1830,6 +7595,12 @@ func (m *XAccountMutation) ClearField(name string) error {
 		return nil
 	case xaccount.FieldRefreshToken:
 		m.ClearRefreshToken()
+		return nil
+	case xaccount.FieldRateLimitRemaining:
+		m.ClearRateLimitRemaining()
+		return nil
+	case xaccount.FieldRateLimitResetAt:
+		m.ClearRateLimitResetAt()
 		return nil
 	}
 	return fmt.Errorf("unknown XAccount nullable field %s", name)
@@ -1863,6 +7634,12 @@ func (m *XAccountMutation) ResetField(name string) error {
 	case xaccount.FieldScopes:
 		m.ResetScopes()
 		return nil
+	case xaccount.FieldRateLimitRemaining:
+		m.ResetRateLimitRemaining()
+		return nil
+	case xaccount.FieldRateLimitResetAt:
+		m.ResetRateLimitResetAt()
+		return nil
 	case xaccount.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
@@ -1875,9 +7652,12 @@ func (m *XAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *XAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.owner != nil {
 		edges = append(edges, xaccount.EdgeOwner)
+	}
+	if m.posts != nil {
+		edges = append(edges, xaccount.EdgePosts)
 	}
 	return edges
 }
@@ -1890,27 +7670,47 @@ func (m *XAccountMutation) AddedIDs(name string) []ent.Value {
 		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
+	case xaccount.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.posts))
+		for id := range m.posts {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *XAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedposts != nil {
+		edges = append(edges, xaccount.EdgePosts)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *XAccountMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case xaccount.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.removedposts))
+		for id := range m.removedposts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *XAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedowner {
 		edges = append(edges, xaccount.EdgeOwner)
+	}
+	if m.clearedposts {
+		edges = append(edges, xaccount.EdgePosts)
 	}
 	return edges
 }
@@ -1921,6 +7721,8 @@ func (m *XAccountMutation) EdgeCleared(name string) bool {
 	switch name {
 	case xaccount.EdgeOwner:
 		return m.clearedowner
+	case xaccount.EdgePosts:
+		return m.clearedposts
 	}
 	return false
 }
@@ -1942,6 +7744,9 @@ func (m *XAccountMutation) ResetEdge(name string) error {
 	switch name {
 	case xaccount.EdgeOwner:
 		m.ResetOwner()
+		return nil
+	case xaccount.EdgePosts:
+		m.ResetPosts()
 		return nil
 	}
 	return fmt.Errorf("unknown XAccount edge %s", name)

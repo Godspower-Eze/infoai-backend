@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
 	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
@@ -21,11 +23,13 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx           *QueryContext
-	order         []user.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.User
-	withXAccounts *XAccountQuery
+	ctx             *QueryContext
+	order           []user.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.User
+	withXAccounts   *XAccountQuery
+	withPosts       *PostQuery
+	withMediaAssets *MediaAssetQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,6 +81,50 @@ func (_q *UserQuery) QueryXAccounts() *XAccountQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(xaccount.Table, xaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.XAccountsTable, user.XAccountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPosts chains the current query on the "posts" edge.
+func (_q *UserQuery) QueryPosts() *PostQuery {
+	query := (&PostClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMediaAssets chains the current query on the "media_assets" edge.
+func (_q *UserQuery) QueryMediaAssets() *MediaAssetQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MediaAssetsTable, user.MediaAssetsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -271,12 +319,14 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:        _q.config,
-		ctx:           _q.ctx.Clone(),
-		order:         append([]user.OrderOption{}, _q.order...),
-		inters:        append([]Interceptor{}, _q.inters...),
-		predicates:    append([]predicate.User{}, _q.predicates...),
-		withXAccounts: _q.withXAccounts.Clone(),
+		config:          _q.config,
+		ctx:             _q.ctx.Clone(),
+		order:           append([]user.OrderOption{}, _q.order...),
+		inters:          append([]Interceptor{}, _q.inters...),
+		predicates:      append([]predicate.User{}, _q.predicates...),
+		withXAccounts:   _q.withXAccounts.Clone(),
+		withPosts:       _q.withPosts.Clone(),
+		withMediaAssets: _q.withMediaAssets.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -291,6 +341,28 @@ func (_q *UserQuery) WithXAccounts(opts ...func(*XAccountQuery)) *UserQuery {
 		opt(query)
 	}
 	_q.withXAccounts = query
+	return _q
+}
+
+// WithPosts tells the query-builder to eager-load the nodes that are connected to
+// the "posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPosts(opts ...func(*PostQuery)) *UserQuery {
+	query := (&PostClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPosts = query
+	return _q
+}
+
+// WithMediaAssets tells the query-builder to eager-load the nodes that are connected to
+// the "media_assets" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithMediaAssets(opts ...func(*MediaAssetQuery)) *UserQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMediaAssets = query
 	return _q
 }
 
@@ -372,8 +444,10 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			_q.withXAccounts != nil,
+			_q.withPosts != nil,
+			_q.withMediaAssets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -398,6 +472,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadXAccounts(ctx, query, nodes,
 			func(n *User) { n.Edges.XAccounts = []*XAccount{} },
 			func(n *User, e *XAccount) { n.Edges.XAccounts = append(n.Edges.XAccounts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPosts; query != nil {
+		if err := _q.loadPosts(ctx, query, nodes,
+			func(n *User) { n.Edges.Posts = []*Post{} },
+			func(n *User, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMediaAssets; query != nil {
+		if err := _q.loadMediaAssets(ctx, query, nodes,
+			func(n *User) { n.Edges.MediaAssets = []*MediaAsset{} },
+			func(n *User, e *MediaAsset) { n.Edges.MediaAssets = append(n.Edges.MediaAssets, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -430,6 +518,66 @@ func (_q *UserQuery) loadXAccounts(ctx context.Context, query *XAccountQuery, no
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_x_accounts" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*User, init func(*User), assign func(*User, *Post)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(post.FieldOwnerID)
+	}
+	query.Where(predicate.Post(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PostsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadMediaAssets(ctx context.Context, query *MediaAssetQuery, nodes []*User, init func(*User), assign func(*User, *MediaAsset)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(mediaasset.FieldOwnerID)
+	}
+	query.Where(predicate.MediaAsset(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.MediaAssetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

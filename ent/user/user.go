@@ -25,6 +25,10 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeXAccounts holds the string denoting the x_accounts edge name in mutations.
 	EdgeXAccounts = "x_accounts"
+	// EdgePosts holds the string denoting the posts edge name in mutations.
+	EdgePosts = "posts"
+	// EdgeMediaAssets holds the string denoting the media_assets edge name in mutations.
+	EdgeMediaAssets = "media_assets"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// XAccountsTable is the table that holds the x_accounts relation/edge.
@@ -34,6 +38,20 @@ const (
 	XAccountsInverseTable = "x_accounts"
 	// XAccountsColumn is the table column denoting the x_accounts relation/edge.
 	XAccountsColumn = "user_x_accounts"
+	// PostsTable is the table that holds the posts relation/edge.
+	PostsTable = "posts"
+	// PostsInverseTable is the table name for the Post entity.
+	// It exists in this package in order to avoid circular dependency with the "post" package.
+	PostsInverseTable = "posts"
+	// PostsColumn is the table column denoting the posts relation/edge.
+	PostsColumn = "owner_id"
+	// MediaAssetsTable is the table that holds the media_assets relation/edge.
+	MediaAssetsTable = "media_assets"
+	// MediaAssetsInverseTable is the table name for the MediaAsset entity.
+	// It exists in this package in order to avoid circular dependency with the "mediaasset" package.
+	MediaAssetsInverseTable = "media_assets"
+	// MediaAssetsColumn is the table column denoting the media_assets relation/edge.
+	MediaAssetsColumn = "owner_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -111,10 +129,52 @@ func ByXAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newXAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPostsCount orders the results by posts count.
+func ByPostsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPostsStep(), opts...)
+	}
+}
+
+// ByPosts orders the results by posts terms.
+func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMediaAssetsCount orders the results by media_assets count.
+func ByMediaAssetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMediaAssetsStep(), opts...)
+	}
+}
+
+// ByMediaAssets orders the results by media_assets terms.
+func ByMediaAssets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMediaAssetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newXAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(XAccountsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, XAccountsTable, XAccountsColumn),
+	)
+}
+func newPostsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PostsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+	)
+}
+func newMediaAssetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MediaAssetsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MediaAssetsTable, MediaAssetsColumn),
 	)
 }

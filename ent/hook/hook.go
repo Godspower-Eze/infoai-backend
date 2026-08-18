@@ -9,6 +9,54 @@ import (
 	"github.com/Godspower-Eze/infoai-backend/ent"
 )
 
+// The MediaAssetFunc type is an adapter to allow the use of ordinary
+// function as MediaAsset mutator.
+type MediaAssetFunc func(context.Context, *ent.MediaAssetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MediaAssetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MediaAssetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MediaAssetMutation", m)
+}
+
+// The PostFunc type is an adapter to allow the use of ordinary
+// function as Post mutator.
+type PostFunc func(context.Context, *ent.PostMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PostFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PostMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PostMutation", m)
+}
+
+// The PostItemFunc type is an adapter to allow the use of ordinary
+// function as PostItem mutator.
+type PostItemFunc func(context.Context, *ent.PostItemMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PostItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PostItemMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PostItemMutation", m)
+}
+
+// The PublicationAttemptFunc type is an adapter to allow the use of ordinary
+// function as PublicationAttempt mutator.
+type PublicationAttemptFunc func(context.Context, *ent.PublicationAttemptMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PublicationAttemptFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PublicationAttemptMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PublicationAttemptMutation", m)
+}
+
 // The SCSSessionFunc type is an adapter to allow the use of ordinary
 // function as SCSSession mutator.
 type SCSSessionFunc func(context.Context, *ent.SCSSessionMutation) (ent.Value, error)
@@ -19,6 +67,18 @@ func (f SCSSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SCSSessionMutation", m)
+}
+
+// The StorageDeletionFunc type is an adapter to allow the use of ordinary
+// function as StorageDeletion mutator.
+type StorageDeletionFunc func(context.Context, *ent.StorageDeletionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StorageDeletionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StorageDeletionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StorageDeletionMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
