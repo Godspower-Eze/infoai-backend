@@ -1,4 +1,4 @@
-.PHONY: build test generate migration migrate run
+.PHONY: build test generate migration migrate river-migrate run
 
 GODOTENV_RUN := go run github.com/joho/godotenv/cmd/godotenv
 
@@ -12,6 +12,7 @@ endef
 
 build:
 	go build ./cmd/api
+	go build ./cmd/worker
 
 test:
 	go test ./...
@@ -25,6 +26,9 @@ migration:
 
 migrate:
 	$(call run_with_dotenv,atlas migrate apply --env local)
+
+river-migrate:
+	$(call run_with_dotenv,sh -c 'go run github.com/riverqueue/river/cmd/river@v0.41.1 migrate-up --database-url "$$DATABASE_URL"')
 
 run:
 	go run ./cmd/api

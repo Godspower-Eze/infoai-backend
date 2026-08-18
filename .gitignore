@@ -2,5 +2,6 @@
 bin/
 coverage.out
 /api
+/worker
 /docs/superpowers/
 /.superpowers/
