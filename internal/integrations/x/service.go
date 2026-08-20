@@ -25,21 +25,25 @@ type OAuthToken struct {
 }
 
 type Profile struct {
-	ID              string
-	Username        string
-	DisplayName     string
-	ProfileImageURL *string
+	ID                    string
+	Username              string
+	DisplayName           string
+	ProfileImageURL       *string
+	SubscriptionType      string
+	SubscriptionCheckedAt *time.Time
 }
 
 type Account struct {
-	ID              uuid.UUID
-	OwnerID         uuid.UUID
-	XUserID         string
-	Username        string
-	DisplayName     string
-	ProfileImageURL *string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID                    uuid.UUID
+	OwnerID               uuid.UUID
+	XUserID               string
+	Username              string
+	DisplayName           string
+	ProfileImageURL       *string
+	SubscriptionType      string
+	SubscriptionCheckedAt *time.Time
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }
 
 type EncryptedGrant struct {
@@ -107,6 +111,8 @@ func (s *Service) CompleteAuthorization(ctx context.Context, ownerID uuid.UUID, 
 	if err != nil {
 		return Account{}, fmt.Errorf("fetch X profile: %w", err)
 	}
+	checkedAt := s.now().UTC()
+	profile.SubscriptionCheckedAt = &checkedAt
 	grant, err := s.encryptGrant(token)
 	if err != nil {
 		return Account{}, err

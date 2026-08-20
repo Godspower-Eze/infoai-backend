@@ -79,6 +79,40 @@ func (_u *XAccountUpdate) ClearProfileImageURL() *XAccountUpdate {
 	return _u
 }
 
+// SetSubscriptionType sets the "subscription_type" field.
+func (_u *XAccountUpdate) SetSubscriptionType(v string) *XAccountUpdate {
+	_u.mutation.SetSubscriptionType(v)
+	return _u
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableSubscriptionType(v *string) *XAccountUpdate {
+	if v != nil {
+		_u.SetSubscriptionType(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_u *XAccountUpdate) SetSubscriptionCheckedAt(v time.Time) *XAccountUpdate {
+	_u.mutation.SetSubscriptionCheckedAt(v)
+	return _u
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountUpdate {
+	if v != nil {
+		_u.SetSubscriptionCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubscriptionCheckedAt clears the value of the "subscription_checked_at" field.
+func (_u *XAccountUpdate) ClearSubscriptionCheckedAt() *XAccountUpdate {
+	_u.mutation.ClearSubscriptionCheckedAt()
+	return _u
+}
+
 // SetAccessToken sets the "access_token" field.
 func (_u *XAccountUpdate) SetAccessToken(v []byte) *XAccountUpdate {
 	_u.mutation.SetAccessToken(v)
@@ -295,6 +329,15 @@ func (_u *XAccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ProfileImageURLCleared() {
 		_spec.ClearField(xaccount.FieldProfileImageURL, field.TypeString)
 	}
+	if value, ok := _u.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubscriptionCheckedAtCleared() {
+		_spec.ClearField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)
 	}
@@ -443,6 +486,40 @@ func (_u *XAccountUpdateOne) SetNillableProfileImageURL(v *string) *XAccountUpda
 // ClearProfileImageURL clears the value of the "profile_image_url" field.
 func (_u *XAccountUpdateOne) ClearProfileImageURL() *XAccountUpdateOne {
 	_u.mutation.ClearProfileImageURL()
+	return _u
+}
+
+// SetSubscriptionType sets the "subscription_type" field.
+func (_u *XAccountUpdateOne) SetSubscriptionType(v string) *XAccountUpdateOne {
+	_u.mutation.SetSubscriptionType(v)
+	return _u
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableSubscriptionType(v *string) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionType(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_u *XAccountUpdateOne) SetSubscriptionCheckedAt(v time.Time) *XAccountUpdateOne {
+	_u.mutation.SetSubscriptionCheckedAt(v)
+	return _u
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubscriptionCheckedAt clears the value of the "subscription_checked_at" field.
+func (_u *XAccountUpdateOne) ClearSubscriptionCheckedAt() *XAccountUpdateOne {
+	_u.mutation.ClearSubscriptionCheckedAt()
 	return _u
 }
 
@@ -691,6 +768,15 @@ func (_u *XAccountUpdateOne) sqlSave(ctx context.Context) (_node *XAccount, err 
 	}
 	if _u.mutation.ProfileImageURLCleared() {
 		_spec.ClearField(xaccount.FieldProfileImageURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubscriptionCheckedAtCleared() {
+		_spec.ClearField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)

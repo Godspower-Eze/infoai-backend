@@ -28,6 +28,10 @@ type XAccount struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// ProfileImageURL holds the value of the "profile_image_url" field.
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
+	// SubscriptionType holds the value of the "subscription_type" field.
+	SubscriptionType string `json:"subscription_type,omitempty"`
+	// SubscriptionCheckedAt holds the value of the "subscription_checked_at" field.
+	SubscriptionCheckedAt *time.Time `json:"subscription_checked_at,omitempty"`
 	// AccessToken holds the value of the "access_token" field.
 	AccessToken []byte `json:"-"`
 	// RefreshToken holds the value of the "refresh_token" field.
@@ -91,9 +95,9 @@ func (*XAccount) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case xaccount.FieldRateLimitRemaining:
 			values[i] = new(sql.NullInt64)
-		case xaccount.FieldXUserID, xaccount.FieldUsername, xaccount.FieldDisplayName, xaccount.FieldProfileImageURL:
+		case xaccount.FieldXUserID, xaccount.FieldUsername, xaccount.FieldDisplayName, xaccount.FieldProfileImageURL, xaccount.FieldSubscriptionType:
 			values[i] = new(sql.NullString)
-		case xaccount.FieldTokenExpiry, xaccount.FieldRateLimitResetAt, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
+		case xaccount.FieldSubscriptionCheckedAt, xaccount.FieldTokenExpiry, xaccount.FieldRateLimitResetAt, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case xaccount.FieldID:
 			values[i] = new(uuid.UUID)
@@ -144,6 +148,19 @@ func (_m *XAccount) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ProfileImageURL = new(string)
 				*_m.ProfileImageURL = value.String
+			}
+		case xaccount.FieldSubscriptionType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_type", values[i])
+			} else if value.Valid {
+				_m.SubscriptionType = value.String
+			}
+		case xaccount.FieldSubscriptionCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_checked_at", values[i])
+			} else if value.Valid {
+				_m.SubscriptionCheckedAt = new(time.Time)
+				*_m.SubscriptionCheckedAt = value.Time
 			}
 		case xaccount.FieldAccessToken:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -262,6 +279,14 @@ func (_m *XAccount) String() string {
 	if v := _m.ProfileImageURL; v != nil {
 		builder.WriteString("profile_image_url=")
 		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("subscription_type=")
+	builder.WriteString(_m.SubscriptionType)
+	builder.WriteString(", ")
+	if v := _m.SubscriptionCheckedAt; v != nil {
+		builder.WriteString("subscription_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("access_token=<sensitive>")

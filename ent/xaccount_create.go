@@ -63,6 +63,34 @@ func (_c *XAccountCreate) SetNillableProfileImageURL(v *string) *XAccountCreate 
 	return _c
 }
 
+// SetSubscriptionType sets the "subscription_type" field.
+func (_c *XAccountCreate) SetSubscriptionType(v string) *XAccountCreate {
+	_c.mutation.SetSubscriptionType(v)
+	return _c
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableSubscriptionType(v *string) *XAccountCreate {
+	if v != nil {
+		_c.SetSubscriptionType(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_c *XAccountCreate) SetSubscriptionCheckedAt(v time.Time) *XAccountCreate {
+	_c.mutation.SetSubscriptionCheckedAt(v)
+	return _c
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountCreate {
+	if v != nil {
+		_c.SetSubscriptionCheckedAt(*v)
+	}
+	return _c
+}
+
 // SetAccessToken sets the "access_token" field.
 func (_c *XAccountCreate) SetAccessToken(v []byte) *XAccountCreate {
 	_c.mutation.SetAccessToken(v)
@@ -222,6 +250,10 @@ func (_c *XAccountCreate) defaults() {
 		v := xaccount.DefaultDisplayName
 		_c.mutation.SetDisplayName(v)
 	}
+	if _, ok := _c.mutation.SubscriptionType(); !ok {
+		v := xaccount.DefaultSubscriptionType
+		_c.mutation.SetSubscriptionType(v)
+	}
 	if _, ok := _c.mutation.Scopes(); !ok {
 		v := xaccount.DefaultScopes
 		_c.mutation.SetScopes(v)
@@ -260,6 +292,9 @@ func (_c *XAccountCreate) check() error {
 	}
 	if _, ok := _c.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "XAccount.display_name"`)}
+	}
+	if _, ok := _c.mutation.SubscriptionType(); !ok {
+		return &ValidationError{Name: "subscription_type", err: errors.New(`ent: missing required field "XAccount.subscription_type"`)}
 	}
 	if _, ok := _c.mutation.AccessToken(); !ok {
 		return &ValidationError{Name: "access_token", err: errors.New(`ent: missing required field "XAccount.access_token"`)}
@@ -334,6 +369,14 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ProfileImageURL(); ok {
 		_spec.SetField(xaccount.FieldProfileImageURL, field.TypeString, value)
 		_node.ProfileImageURL = &value
+	}
+	if value, ok := _c.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+		_node.SubscriptionType = value
+	}
+	if value, ok := _c.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+		_node.SubscriptionCheckedAt = &value
 	}
 	if value, ok := _c.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)

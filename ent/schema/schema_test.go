@@ -108,6 +108,12 @@ func TestXAccountSchemaEnforcesExclusiveOwnershipAndProtectsTokens(t *testing.T)
 			t.Fatalf("%s must be nullable shared provider state", name)
 		}
 	}
+	if descriptor := fields["subscription_type"]; descriptor == nil || descriptor.Optional || descriptor.Nillable {
+		t.Fatal("subscription_type must always retain the provider value")
+	}
+	if descriptor := fields["subscription_checked_at"]; descriptor == nil || !descriptor.Optional || !descriptor.Nillable {
+		t.Fatal("subscription_checked_at must be nullable until X metadata is fetched")
+	}
 
 	owner := edgesByName((XAccount{}).Edges())["owner"]
 	if owner == nil || !owner.Required || !owner.Unique || !owner.Immutable {

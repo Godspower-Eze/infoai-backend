@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -59,24 +59,28 @@ func (api *API) xAccounts(response http.ResponseWriter, request *http.Request) {
 }
 
 type xAccountResponse struct {
-	ID              uuid.UUID `json:"id"`
-	XUserID         string    `json:"x_user_id"`
-	Username        string    `json:"username"`
-	DisplayName     string    `json:"display_name"`
-	ProfileImageURL *string   `json:"profile_image_url"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID                    uuid.UUID  `json:"id"`
+	XUserID               string     `json:"x_user_id"`
+	Username              string     `json:"username"`
+	DisplayName           string     `json:"display_name"`
+	ProfileImageURL       *string    `json:"profile_image_url"`
+	SubscriptionType      string     `json:"subscription_type"`
+	SubscriptionCheckedAt *time.Time `json:"subscription_checked_at"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 
 func newXAccountResponse(account xintegration.Account) xAccountResponse {
 	return xAccountResponse{
-		ID:              account.ID,
-		XUserID:         account.XUserID,
-		Username:        account.Username,
-		DisplayName:     account.DisplayName,
-		ProfileImageURL: account.ProfileImageURL,
-		CreatedAt:       account.CreatedAt,
-		UpdatedAt:       account.UpdatedAt,
+		ID:                    account.ID,
+		XUserID:               account.XUserID,
+		Username:              account.Username,
+		DisplayName:           account.DisplayName,
+		ProfileImageURL:       account.ProfileImageURL,
+		SubscriptionType:      account.SubscriptionType,
+		SubscriptionCheckedAt: account.SubscriptionCheckedAt,
+		CreatedAt:             account.CreatedAt,
+		UpdatedAt:             account.UpdatedAt,
 	}
 }
 

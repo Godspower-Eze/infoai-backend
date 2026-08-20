@@ -23,6 +23,10 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldProfileImageURL holds the string denoting the profile_image_url field in the database.
 	FieldProfileImageURL = "profile_image_url"
+	// FieldSubscriptionType holds the string denoting the subscription_type field in the database.
+	FieldSubscriptionType = "subscription_type"
+	// FieldSubscriptionCheckedAt holds the string denoting the subscription_checked_at field in the database.
+	FieldSubscriptionCheckedAt = "subscription_checked_at"
 	// FieldAccessToken holds the string denoting the access_token field in the database.
 	FieldAccessToken = "access_token"
 	// FieldRefreshToken holds the string denoting the refresh_token field in the database.
@@ -68,6 +72,8 @@ var Columns = []string{
 	FieldUsername,
 	FieldDisplayName,
 	FieldProfileImageURL,
+	FieldSubscriptionType,
+	FieldSubscriptionCheckedAt,
 	FieldAccessToken,
 	FieldRefreshToken,
 	FieldTokenExpiry,
@@ -106,6 +112,8 @@ var (
 	UsernameValidator func(string) error
 	// DefaultDisplayName holds the default value on creation for the "display_name" field.
 	DefaultDisplayName string
+	// DefaultSubscriptionType holds the default value on creation for the "subscription_type" field.
+	DefaultSubscriptionType string
 	// DefaultScopes holds the default value on creation for the "scopes" field.
 	DefaultScopes []string
 	// RateLimitRemainingValidator is a validator for the "rate_limit_remaining" field. It is called by the builders before save.
@@ -146,6 +154,16 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 // ByProfileImageURL orders the results by the profile_image_url field.
 func ByProfileImageURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProfileImageURL, opts...).ToFunc()
+}
+
+// BySubscriptionType orders the results by the subscription_type field.
+func BySubscriptionType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionType, opts...).ToFunc()
+}
+
+// BySubscriptionCheckedAt orders the results by the subscription_checked_at field.
+func BySubscriptionCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionCheckedAt, opts...).ToFunc()
 }
 
 // ByTokenExpiry orders the results by the token_expiry field.

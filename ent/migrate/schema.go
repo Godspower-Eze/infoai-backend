@@ -237,6 +237,8 @@ var (
 		{Name: "username", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString, Default: ""},
 		{Name: "profile_image_url", Type: field.TypeString, Nullable: true},
+		{Name: "subscription_type", Type: field.TypeString, Default: ""},
+		{Name: "subscription_checked_at", Type: field.TypeTime, Nullable: true},
 		{Name: "access_token", Type: field.TypeBytes},
 		{Name: "refresh_token", Type: field.TypeBytes, Nullable: true},
 		{Name: "token_expiry", Type: field.TypeTime},
@@ -255,7 +257,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "x_accounts_users_x_accounts",
-				Columns:    []*schema.Column{XAccountsColumns[13]},
+				Columns:    []*schema.Column{XAccountsColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

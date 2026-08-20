@@ -28,20 +28,27 @@ func TestEntAccountRepositoryUpsertsForOwnerAndRejectsOtherOwner(t *testing.T) {
 	firstOwner := createOwner(t, client, "first@example.com")
 	secondOwner := createOwner(t, client, "second@example.com")
 	ctx := context.Background()
-	profile := Profile{ID: "x-123", Username: "first", DisplayName: "First"}
+	firstCheckedAt := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
+	profile := Profile{ID: "x-123", Username: "first", DisplayName: "First", SubscriptionType: "Premium", SubscriptionCheckedAt: &firstCheckedAt}
 	initialGrant := EncryptedGrant{AccessToken: []byte("cipher-one"), Expiry: time.Now().Add(time.Hour), Scopes: []string{"tweet.read"}}
 
 	created, err := repository.Upsert(ctx, firstOwner.ID, profile, initialGrant)
 	if err != nil {
 		t.Fatalf("first Upsert() error = %v", err)
 	}
+	if created.SubscriptionType != "Premium" || created.SubscriptionCheckedAt == nil || !created.SubscriptionCheckedAt.Equal(firstCheckedAt) {
+		t.Fatalf("created subscription metadata = %q/%v", created.SubscriptionType, created.SubscriptionCheckedAt)
+	}
 	profile.Username = "renamed"
+	secondCheckedAt := firstCheckedAt.Add(time.Hour)
+	profile.SubscriptionType = "FutureTier"
+	profile.SubscriptionCheckedAt = &secondCheckedAt
 	replacement := EncryptedGrant{AccessToken: []byte("cipher-two"), Expiry: time.Now().Add(2 * time.Hour), Scopes: []string{"tweet.read", "tweet.write"}}
 	updated, err := repository.Upsert(ctx, firstOwner.ID, profile, replacement)
 	if err != nil {
 		t.Fatalf("owner Upsert() error = %v", err)
 	}
-	if updated.ID != created.ID || updated.Username != "renamed" {
+	if updated.ID != created.ID || updated.Username != "renamed" || updated.SubscriptionType != "FutureTier" || updated.SubscriptionCheckedAt == nil || !updated.SubscriptionCheckedAt.Equal(secondCheckedAt) {
 		t.Fatalf("owner Upsert() = %+v, want same account with updated metadata", updated)
 	}
 	stored, err := repository.Grant(ctx, firstOwner.ID, created.ID)

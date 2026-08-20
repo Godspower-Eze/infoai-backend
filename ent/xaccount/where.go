@@ -76,6 +76,16 @@ func ProfileImageURL(v string) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldProfileImageURL, v))
 }
 
+// SubscriptionType applies equality check predicate on the "subscription_type" field. It's identical to SubscriptionTypeEQ.
+func SubscriptionType(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionCheckedAt applies equality check predicate on the "subscription_checked_at" field. It's identical to SubscriptionCheckedAtEQ.
+func SubscriptionCheckedAt(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionCheckedAt, v))
+}
+
 // AccessToken applies equality check predicate on the "access_token" field. It's identical to AccessTokenEQ.
 func AccessToken(v []byte) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldAccessToken, v))
@@ -379,6 +389,121 @@ func ProfileImageURLEqualFold(v string) predicate.XAccount {
 // ProfileImageURLContainsFold applies the ContainsFold predicate on the "profile_image_url" field.
 func ProfileImageURLContainsFold(v string) predicate.XAccount {
 	return predicate.XAccount(sql.FieldContainsFold(FieldProfileImageURL, v))
+}
+
+// SubscriptionTypeEQ applies the EQ predicate on the "subscription_type" field.
+func SubscriptionTypeEQ(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeNEQ applies the NEQ predicate on the "subscription_type" field.
+func SubscriptionTypeNEQ(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeIn applies the In predicate on the "subscription_type" field.
+func SubscriptionTypeIn(vs ...string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldSubscriptionType, vs...))
+}
+
+// SubscriptionTypeNotIn applies the NotIn predicate on the "subscription_type" field.
+func SubscriptionTypeNotIn(vs ...string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldSubscriptionType, vs...))
+}
+
+// SubscriptionTypeGT applies the GT predicate on the "subscription_type" field.
+func SubscriptionTypeGT(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeGTE applies the GTE predicate on the "subscription_type" field.
+func SubscriptionTypeGTE(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeLT applies the LT predicate on the "subscription_type" field.
+func SubscriptionTypeLT(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeLTE applies the LTE predicate on the "subscription_type" field.
+func SubscriptionTypeLTE(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeContains applies the Contains predicate on the "subscription_type" field.
+func SubscriptionTypeContains(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldContains(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeHasPrefix applies the HasPrefix predicate on the "subscription_type" field.
+func SubscriptionTypeHasPrefix(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldHasPrefix(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeHasSuffix applies the HasSuffix predicate on the "subscription_type" field.
+func SubscriptionTypeHasSuffix(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldHasSuffix(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeEqualFold applies the EqualFold predicate on the "subscription_type" field.
+func SubscriptionTypeEqualFold(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEqualFold(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeContainsFold applies the ContainsFold predicate on the "subscription_type" field.
+func SubscriptionTypeContainsFold(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldContainsFold(FieldSubscriptionType, v))
+}
+
+// SubscriptionCheckedAtEQ applies the EQ predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtNEQ applies the NEQ predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtIn applies the In predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldSubscriptionCheckedAt, vs...))
+}
+
+// SubscriptionCheckedAtNotIn applies the NotIn predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNotIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldSubscriptionCheckedAt, vs...))
+}
+
+// SubscriptionCheckedAtGT applies the GT predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtGT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtGTE applies the GTE predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtGTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtLT applies the LT predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtLT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtLTE applies the LTE predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtLTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtIsNil applies the IsNil predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtIsNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldIsNull(FieldSubscriptionCheckedAt))
+}
+
+// SubscriptionCheckedAtNotNil applies the NotNil predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNotNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotNull(FieldSubscriptionCheckedAt))
 }
 
 // AccessTokenEQ applies the EQ predicate on the "access_token" field.

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexedwards/scs/v2/memstore"
 	"github.com/Godspower-Eze/infoai-backend/internal/auth"
 	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
+	"github.com/alexedwards/scs/v2/memstore"
 	"github.com/google/uuid"
 )
 
@@ -238,7 +238,8 @@ func TestXRoutesRequireAuthenticationAndExposeOnlyMetadata(t *testing.T) {
 	}
 	cookie := signup(t, api)
 	accountID := uuid.New()
-	api.x.accounts = []xintegration.Account{{ID: accountID, XUserID: "x-123", Username: "person", DisplayName: "A Person"}}
+	checkedAt := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
+	api.x.accounts = []xintegration.Account{{ID: accountID, XUserID: "x-123", Username: "person", DisplayName: "A Person", SubscriptionType: "PremiumPlus", SubscriptionCheckedAt: &checkedAt}}
 
 	authorize := request(t, api.handler, http.MethodPost, "/api/v1/integrations/x/authorize", nil, cookie)
 	if authorize.Code != http.StatusOK || !bytes.Contains(authorize.Body.Bytes(), []byte("https://x.example/authorize")) {
@@ -247,6 +248,9 @@ func TestXRoutesRequireAuthenticationAndExposeOnlyMetadata(t *testing.T) {
 	accounts := request(t, api.handler, http.MethodGet, "/api/v1/integrations/x/accounts", nil, cookie)
 	if accounts.Code != http.StatusOK || bytes.Contains(accounts.Body.Bytes(), []byte("token")) {
 		t.Fatalf("accounts status = %d, body = %s", accounts.Code, accounts.Body.String())
+	}
+	if !bytes.Contains(accounts.Body.Bytes(), []byte(`"subscription_type":"PremiumPlus"`)) || !bytes.Contains(accounts.Body.Bytes(), []byte(`"subscription_checked_at":"2026-08-18T12:00:00Z"`)) {
+		t.Fatalf("accounts response omits subscription metadata: %s", accounts.Body.String())
 	}
 	disconnect := request(t, api.handler, http.MethodDelete, "/api/v1/integrations/x/accounts/"+accountID.String(), nil, cookie)
 	if disconnect.Code != http.StatusNoContent || api.x.disconnectedID != accountID {

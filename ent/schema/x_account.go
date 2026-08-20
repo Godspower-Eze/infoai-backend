@@ -37,6 +37,11 @@ func (XAccount) Fields() []ent.Field {
 		field.String("profile_image_url").
 			Optional().
 			Nillable(),
+		field.String("subscription_type").
+			Default(""),
+		field.Time("subscription_checked_at").
+			Optional().
+			Nillable(),
 		field.Bytes("access_token").
 			Sensitive(),
 		field.Bytes("refresh_token").

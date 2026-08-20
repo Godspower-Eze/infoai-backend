@@ -80,7 +80,8 @@ func (c *XClient) Exchange(ctx context.Context, code, verifier string) (OAuthTok
 }
 
 func (c *XClient) CurrentUser(ctx context.Context, accessToken string) (Profile, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.endpoints.APIBaseURL, "/")+"/2/users/me?user.fields=profile_image_url", nil)
+	query := url.Values{"user.fields": {"profile_image_url,subscription_type"}}
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.endpoints.APIBaseURL, "/")+"/2/users/me?"+query.Encode(), nil)
 	if err != nil {
 		return Profile{}, err
 	}
@@ -95,10 +96,11 @@ func (c *XClient) CurrentUser(ctx context.Context, accessToken string) (Profile,
 	}
 	var payload struct {
 		Data struct {
-			ID              string  `json:"id"`
-			Username        string  `json:"username"`
-			Name            string  `json:"name"`
-			ProfileImageURL *string `json:"profile_image_url"`
+			ID               string  `json:"id"`
+			Username         string  `json:"username"`
+			Name             string  `json:"name"`
+			ProfileImageURL  *string `json:"profile_image_url"`
+			SubscriptionType string  `json:"subscription_type"`
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(io.LimitReader(response.Body, 1<<20)).Decode(&payload); err != nil {
@@ -107,7 +109,13 @@ func (c *XClient) CurrentUser(ctx context.Context, accessToken string) (Profile,
 	if payload.Data.ID == "" || payload.Data.Username == "" {
 		return Profile{}, fmt.Errorf("X profile response is missing identity fields")
 	}
-	return Profile{ID: payload.Data.ID, Username: payload.Data.Username, DisplayName: payload.Data.Name, ProfileImageURL: payload.Data.ProfileImageURL}, nil
+	return Profile{
+		ID:               payload.Data.ID,
+		Username:         payload.Data.Username,
+		DisplayName:      payload.Data.Name,
+		ProfileImageURL:  payload.Data.ProfileImageURL,
+		SubscriptionType: payload.Data.SubscriptionType,
+	}, nil
 }
 
 func (c *XClient) Refresh(ctx context.Context, refreshToken string) (OAuthToken, error) {

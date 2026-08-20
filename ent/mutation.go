@@ -6552,6 +6552,8 @@ type XAccountMutation struct {
 	username                *string
 	display_name            *string
 	profile_image_url       *string
+	subscription_type       *string
+	subscription_checked_at *time.Time
 	access_token            *[]byte
 	refresh_token           *[]byte
 	token_expiry            *time.Time
@@ -6832,6 +6834,91 @@ func (m *XAccountMutation) ProfileImageURLCleared() bool {
 func (m *XAccountMutation) ResetProfileImageURL() {
 	m.profile_image_url = nil
 	delete(m.clearedFields, xaccount.FieldProfileImageURL)
+}
+
+// SetSubscriptionType sets the "subscription_type" field.
+func (m *XAccountMutation) SetSubscriptionType(s string) {
+	m.subscription_type = &s
+}
+
+// SubscriptionType returns the value of the "subscription_type" field in the mutation.
+func (m *XAccountMutation) SubscriptionType() (r string, exists bool) {
+	v := m.subscription_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionType returns the old "subscription_type" field's value of the XAccount entity.
+// If the XAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *XAccountMutation) OldSubscriptionType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionType: %w", err)
+	}
+	return oldValue.SubscriptionType, nil
+}
+
+// ResetSubscriptionType resets all changes to the "subscription_type" field.
+func (m *XAccountMutation) ResetSubscriptionType() {
+	m.subscription_type = nil
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (m *XAccountMutation) SetSubscriptionCheckedAt(t time.Time) {
+	m.subscription_checked_at = &t
+}
+
+// SubscriptionCheckedAt returns the value of the "subscription_checked_at" field in the mutation.
+func (m *XAccountMutation) SubscriptionCheckedAt() (r time.Time, exists bool) {
+	v := m.subscription_checked_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionCheckedAt returns the old "subscription_checked_at" field's value of the XAccount entity.
+// If the XAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *XAccountMutation) OldSubscriptionCheckedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionCheckedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionCheckedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionCheckedAt: %w", err)
+	}
+	return oldValue.SubscriptionCheckedAt, nil
+}
+
+// ClearSubscriptionCheckedAt clears the value of the "subscription_checked_at" field.
+func (m *XAccountMutation) ClearSubscriptionCheckedAt() {
+	m.subscription_checked_at = nil
+	m.clearedFields[xaccount.FieldSubscriptionCheckedAt] = struct{}{}
+}
+
+// SubscriptionCheckedAtCleared returns if the "subscription_checked_at" field was cleared in this mutation.
+func (m *XAccountMutation) SubscriptionCheckedAtCleared() bool {
+	_, ok := m.clearedFields[xaccount.FieldSubscriptionCheckedAt]
+	return ok
+}
+
+// ResetSubscriptionCheckedAt resets all changes to the "subscription_checked_at" field.
+func (m *XAccountMutation) ResetSubscriptionCheckedAt() {
+	m.subscription_checked_at = nil
+	delete(m.clearedFields, xaccount.FieldSubscriptionCheckedAt)
 }
 
 // SetAccessToken sets the "access_token" field.
@@ -7324,7 +7411,7 @@ func (m *XAccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *XAccountMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 14)
 	if m.x_user_id != nil {
 		fields = append(fields, xaccount.FieldXUserID)
 	}
@@ -7336,6 +7423,12 @@ func (m *XAccountMutation) Fields() []string {
 	}
 	if m.profile_image_url != nil {
 		fields = append(fields, xaccount.FieldProfileImageURL)
+	}
+	if m.subscription_type != nil {
+		fields = append(fields, xaccount.FieldSubscriptionType)
+	}
+	if m.subscription_checked_at != nil {
+		fields = append(fields, xaccount.FieldSubscriptionCheckedAt)
 	}
 	if m.access_token != nil {
 		fields = append(fields, xaccount.FieldAccessToken)
@@ -7377,6 +7470,10 @@ func (m *XAccountMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case xaccount.FieldProfileImageURL:
 		return m.ProfileImageURL()
+	case xaccount.FieldSubscriptionType:
+		return m.SubscriptionType()
+	case xaccount.FieldSubscriptionCheckedAt:
+		return m.SubscriptionCheckedAt()
 	case xaccount.FieldAccessToken:
 		return m.AccessToken()
 	case xaccount.FieldRefreshToken:
@@ -7410,6 +7507,10 @@ func (m *XAccountMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldDisplayName(ctx)
 	case xaccount.FieldProfileImageURL:
 		return m.OldProfileImageURL(ctx)
+	case xaccount.FieldSubscriptionType:
+		return m.OldSubscriptionType(ctx)
+	case xaccount.FieldSubscriptionCheckedAt:
+		return m.OldSubscriptionCheckedAt(ctx)
 	case xaccount.FieldAccessToken:
 		return m.OldAccessToken(ctx)
 	case xaccount.FieldRefreshToken:
@@ -7462,6 +7563,20 @@ func (m *XAccountMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProfileImageURL(v)
+		return nil
+	case xaccount.FieldSubscriptionType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionType(v)
+		return nil
+	case xaccount.FieldSubscriptionCheckedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionCheckedAt(v)
 		return nil
 	case xaccount.FieldAccessToken:
 		v, ok := value.([]byte)
@@ -7567,6 +7682,9 @@ func (m *XAccountMutation) ClearedFields() []string {
 	if m.FieldCleared(xaccount.FieldProfileImageURL) {
 		fields = append(fields, xaccount.FieldProfileImageURL)
 	}
+	if m.FieldCleared(xaccount.FieldSubscriptionCheckedAt) {
+		fields = append(fields, xaccount.FieldSubscriptionCheckedAt)
+	}
 	if m.FieldCleared(xaccount.FieldRefreshToken) {
 		fields = append(fields, xaccount.FieldRefreshToken)
 	}
@@ -7592,6 +7710,9 @@ func (m *XAccountMutation) ClearField(name string) error {
 	switch name {
 	case xaccount.FieldProfileImageURL:
 		m.ClearProfileImageURL()
+		return nil
+	case xaccount.FieldSubscriptionCheckedAt:
+		m.ClearSubscriptionCheckedAt()
 		return nil
 	case xaccount.FieldRefreshToken:
 		m.ClearRefreshToken()
@@ -7621,6 +7742,12 @@ func (m *XAccountMutation) ResetField(name string) error {
 		return nil
 	case xaccount.FieldProfileImageURL:
 		m.ResetProfileImageURL()
+		return nil
+	case xaccount.FieldSubscriptionType:
+		m.ResetSubscriptionType()
+		return nil
+	case xaccount.FieldSubscriptionCheckedAt:
+		m.ResetSubscriptionCheckedAt()
 		return nil
 	case xaccount.FieldAccessToken:
 		m.ResetAccessToken()

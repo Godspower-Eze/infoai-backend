@@ -43,6 +43,8 @@ func (r *EntAccountRepository) Upsert(ctx context.Context, ownerID uuid.UUID, pr
 		SetUsername(profile.Username).
 		SetDisplayName(profile.DisplayName).
 		SetNillableProfileImageURL(profile.ProfileImageURL).
+		SetSubscriptionType(profile.SubscriptionType).
+		SetNillableSubscriptionCheckedAt(profile.SubscriptionCheckedAt).
 		SetAccessToken(grant.AccessToken).
 		SetTokenExpiry(grant.Expiry).
 		SetScopes(grant.Scopes)
@@ -129,6 +131,7 @@ func (r *EntAccountRepository) updateExisting(ctx context.Context, stored *ent.X
 	update := stored.Update().
 		SetUsername(profile.Username).
 		SetDisplayName(profile.DisplayName).
+		SetSubscriptionType(profile.SubscriptionType).
 		SetAccessToken(grant.AccessToken).
 		SetTokenExpiry(grant.Expiry).
 		SetScopes(grant.Scopes)
@@ -136,6 +139,11 @@ func (r *EntAccountRepository) updateExisting(ctx context.Context, stored *ent.X
 		update.ClearProfileImageURL()
 	} else {
 		update.SetProfileImageURL(*profile.ProfileImageURL)
+	}
+	if profile.SubscriptionCheckedAt == nil {
+		update.ClearSubscriptionCheckedAt()
+	} else {
+		update.SetSubscriptionCheckedAt(*profile.SubscriptionCheckedAt)
 	}
 	if len(grant.RefreshToken) == 0 {
 		update.ClearRefreshToken()
@@ -162,14 +170,16 @@ func (r *EntAccountRepository) ownedQuery(ownerID, accountID uuid.UUID) *ent.XAc
 
 func accountFromEnt(stored *ent.XAccount, ownerID uuid.UUID) Account {
 	return Account{
-		ID:              stored.ID,
-		OwnerID:         ownerID,
-		XUserID:         stored.XUserID,
-		Username:        stored.Username,
-		DisplayName:     stored.DisplayName,
-		ProfileImageURL: stored.ProfileImageURL,
-		CreatedAt:       stored.CreatedAt,
-		UpdatedAt:       stored.UpdatedAt,
+		ID:                    stored.ID,
+		OwnerID:               ownerID,
+		XUserID:               stored.XUserID,
+		Username:              stored.Username,
+		DisplayName:           stored.DisplayName,
+		ProfileImageURL:       stored.ProfileImageURL,
+		SubscriptionType:      stored.SubscriptionType,
+		SubscriptionCheckedAt: stored.SubscriptionCheckedAt,
+		CreatedAt:             stored.CreatedAt,
+		UpdatedAt:             stored.UpdatedAt,
 	}
 }
 

@@ -248,20 +248,24 @@ func init() {
 	xaccountDescDisplayName := xaccountFields[3].Descriptor()
 	// xaccount.DefaultDisplayName holds the default value on creation for the display_name field.
 	xaccount.DefaultDisplayName = xaccountDescDisplayName.Default.(string)
+	// xaccountDescSubscriptionType is the schema descriptor for subscription_type field.
+	xaccountDescSubscriptionType := xaccountFields[5].Descriptor()
+	// xaccount.DefaultSubscriptionType holds the default value on creation for the subscription_type field.
+	xaccount.DefaultSubscriptionType = xaccountDescSubscriptionType.Default.(string)
 	// xaccountDescScopes is the schema descriptor for scopes field.
-	xaccountDescScopes := xaccountFields[8].Descriptor()
+	xaccountDescScopes := xaccountFields[10].Descriptor()
 	// xaccount.DefaultScopes holds the default value on creation for the scopes field.
 	xaccount.DefaultScopes = xaccountDescScopes.Default.([]string)
 	// xaccountDescRateLimitRemaining is the schema descriptor for rate_limit_remaining field.
-	xaccountDescRateLimitRemaining := xaccountFields[9].Descriptor()
+	xaccountDescRateLimitRemaining := xaccountFields[11].Descriptor()
 	// xaccount.RateLimitRemainingValidator is a validator for the "rate_limit_remaining" field. It is called by the builders before save.
 	xaccount.RateLimitRemainingValidator = xaccountDescRateLimitRemaining.Validators[0].(func(int) error)
 	// xaccountDescCreatedAt is the schema descriptor for created_at field.
-	xaccountDescCreatedAt := xaccountFields[11].Descriptor()
+	xaccountDescCreatedAt := xaccountFields[13].Descriptor()
 	// xaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
 	xaccount.DefaultCreatedAt = xaccountDescCreatedAt.Default.(func() time.Time)
 	// xaccountDescUpdatedAt is the schema descriptor for updated_at field.
-	xaccountDescUpdatedAt := xaccountFields[12].Descriptor()
+	xaccountDescUpdatedAt := xaccountFields[14].Descriptor()
 	// xaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	xaccount.DefaultUpdatedAt = xaccountDescUpdatedAt.Default.(func() time.Time)
 	// xaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
