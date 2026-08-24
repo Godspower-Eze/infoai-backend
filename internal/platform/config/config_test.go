@@ -53,6 +53,32 @@ func TestLoadAcceptsValidEnvironment(t *testing.T) {
 	if cfg.ErrorLogPath != "var/log/infoai/errors.jsonl" || cfg.ErrorLogMaxBytes != 10<<20 || cfg.ErrorLogRetainedFiles != 5 {
 		t.Fatalf("error log defaults = %q/%d/%d", cfg.ErrorLogPath, cfg.ErrorLogMaxBytes, cfg.ErrorLogRetainedFiles)
 	}
+	if cfg.MediaStorageRoot != "var/media" {
+		t.Fatalf("MediaStorageRoot = %q, want var/media", cfg.MediaStorageRoot)
+	}
+}
+
+func TestLoadAcceptsCustomMediaStorageRoot(t *testing.T) {
+	environment := validEnvironment()
+	environment["MEDIA_STORAGE_ROOT"] = " /srv/infoai/media "
+
+	cfg, err := config.Load(lookup(environment))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.MediaStorageRoot != "/srv/infoai/media" {
+		t.Fatalf("MediaStorageRoot = %q, want /srv/infoai/media", cfg.MediaStorageRoot)
+	}
+}
+
+func TestLoadRejectsEmptyConfiguredMediaStorageRoot(t *testing.T) {
+	environment := validEnvironment()
+	environment["MEDIA_STORAGE_ROOT"] = "  "
+
+	_, err := config.Load(lookup(environment))
+	if err == nil || !strings.Contains(err.Error(), "MEDIA_STORAGE_ROOT must not be empty") {
+		t.Fatalf("Load() error = %v, want MEDIA_STORAGE_ROOT validation error", err)
+	}
 }
 
 func TestLoadRejectsInvalidErrorLogConfiguration(t *testing.T) {

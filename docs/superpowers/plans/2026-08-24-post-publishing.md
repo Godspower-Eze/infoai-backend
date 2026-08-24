@@ -361,7 +361,7 @@ type ItemInput struct {
 }
 ```
 
-Tests cover one-to-25 ordered items, empty items, owner/account mismatch, cached subscription limits, immutable states, UTC scheduling, rescheduling, and cancellation returning `scheduled` to `draft`.
+Tests cover one-to-25 ordered items, temporarily empty draft items, owner/account mismatch, cached subscription limits, immutable states, UTC scheduling, rescheduling, and cancellation returning `scheduled` to `draft`. Draft creation and draft updates permit incomplete items; schedule validation rejects every item containing neither text nor media with an item-specific field error. Scheduled updates must remain publishable.
 
 - [ ] **Step 2: Run service tests and observe failure**
 
@@ -421,12 +421,12 @@ git commit -m "feat: add post draft service"
 
 **Interfaces:**
 - Consumes Task 4 post-service commands and Task 3 `MediaStorage`.
-- Produces authenticated JSON endpoints for draft CRUD/schedule/cancel and multipart media upload/removal.
+- Produces authenticated JSON endpoints for draft CRUD/schedule/cancel and item-scoped multipart media upload/removal.
 - Adds `Posts PostService` and `Media MediaStorage` to `httpapi.Dependencies`.
 
 - [ ] **Step 1: Write failing route/handler tests**
 
-Use fake services and session cookies. Assert authentication, ownership delegation, unknown-field rejection, `PATCH` CORS allowance, stable error codes, ordered response items, multipart limits, and schedule timestamps with offsets.
+Use fake services and session cookies. Assert authentication, ownership delegation, unknown-field rejection, `PATCH` CORS allowance, stable error codes, ordered response items, multipart limits, and schedule timestamps with offsets. Cover creating an empty draft item, uploading media through `/api/v1/posts/{postID}/items/{itemID}/media`, removing media through the corresponding item-scoped route, and rejecting item IDs that do not belong to the owner-scoped post.
 
 ```go
 func TestCreatePostRequiresAuthentication(t *testing.T) {
@@ -443,7 +443,7 @@ Expected: FAIL because routes and dependency are absent.
 
 - [ ] **Step 3: Add handler interfaces, request/response DTOs, and routes**
 
-Handlers perform decoding, path UUID parsing, multipart bounding, service calls, and error mapping only. Add `PATCH` to CORS methods. Do not expose Ent objects.
+Handlers perform decoding, path UUID parsing, multipart bounding, service calls, and error mapping only. Add `PATCH` to CORS methods. Do not expose Ent objects. Publish and schedule map incomplete-item validation to `422` with the affected item position or ID.
 
 - [ ] **Step 4: Implement media upload consistency**
 
@@ -510,7 +510,7 @@ Use River's transaction-bound client/insert API with the `*sql.Tx` passed by `da
 
 - [ ] **Step 4: Add failing service tests for atomic publish/schedule/cancel**
 
-Assert state changes and job insertion occur in the same fake transaction contract, active job identity/version is stored, and stale cancellation invalidates the version.
+Assert state changes and job insertion occur in the same fake transaction contract, active job identity/version is stored, and stale cancellation invalidates the version. Both immediate publish and scheduling reject any item containing neither text nor media before changing state or inserting a job.
 
 - [ ] **Step 5: Implement publish/schedule queue orchestration**
 
@@ -518,7 +518,7 @@ Immediate publish transitions `draft → publishing`; scheduling transitions `dr
 
 - [ ] **Step 6: Add the immediate-publish HTTP command**
 
-Register `POST /api/v1/posts/{postID}/publish`. Test `202 Accepted`, owner scoping, the `draft` source-state requirement, duplicate request conflict, and returned current job state.
+Register `POST /api/v1/posts/{postID}/publish`. Test `202 Accepted`, owner scoping, the `draft` source-state requirement, incomplete-item `422` responses, duplicate request conflict, and returned current job state.
 
 - [ ] **Step 7: Run validation**
 

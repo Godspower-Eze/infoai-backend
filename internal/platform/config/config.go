@@ -30,6 +30,7 @@ type Config struct {
 	ErrorLogPath          string
 	ErrorLogMaxBytes      int64
 	ErrorLogRetainedFiles int
+	MediaStorageRoot      string
 }
 
 type ValidationError struct {
@@ -47,6 +48,7 @@ func Load(lookup LookupFunc) (Config, error) {
 	cfg.ErrorLogPath = "var/log/infoai/errors.jsonl"
 	cfg.ErrorLogMaxBytes = 10 << 20
 	cfg.ErrorLogRetainedFiles = 5
+	cfg.MediaStorageRoot = "var/media"
 	if raw, ok := lookup("HTTP_ADDRESS"); ok && strings.TrimSpace(raw) != "" {
 		cfg.HTTPAddress = strings.TrimSpace(raw)
 	}
@@ -90,6 +92,13 @@ func Load(lookup LookupFunc) (Config, error) {
 			problems = append(problems, "ERROR_LOG_RETAINED_FILES must be a positive integer")
 		} else {
 			cfg.ErrorLogRetainedFiles = value
+		}
+	}
+	if raw, ok := lookup("MEDIA_STORAGE_ROOT"); ok {
+		if strings.TrimSpace(raw) == "" {
+			problems = append(problems, "MEDIA_STORAGE_ROOT must not be empty")
+		} else {
+			cfg.MediaStorageRoot = strings.TrimSpace(raw)
 		}
 	}
 
