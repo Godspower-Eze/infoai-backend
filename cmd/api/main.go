@@ -10,12 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alexedwards/scs/pgxstore"
 	"github.com/Godspower-Eze/infoai-backend/internal/auth"
 	"github.com/Godspower-Eze/infoai-backend/internal/httpapi"
 	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/database"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/errorreporting"
+	"github.com/alexedwards/scs/pgxstore"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	}
 }
 
-func run(logger *slog.Logger) error {
+func run(logger *slog.Logger) (runErr error) {
 	if err := config.LoadDotEnv(".env"); err != nil {
 		return err
 	}
@@ -34,6 +35,13 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	reporter, err := errorreporting.NewFileReporter(errorreporting.FileConfig{
+		Path: cfg.ErrorLogPath, MaxBytes: cfg.ErrorLogMaxBytes, RetainedFiles: cfg.ErrorLogRetainedFiles,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() { runErr = errors.Join(runErr, reporter.Close()) }()
 
 	startupContext, cancelStartup := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelStartup()
