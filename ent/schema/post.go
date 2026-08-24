@@ -23,7 +23,7 @@ func (Post) Fields() []ent.Field {
 		field.Enum("creation_mode").
 			Values("user", "agent"),
 		field.Enum("status").
-			Values("draft", "scheduled", "publishing", "retry_wait", "partially_published", "published", "failed", "cancelled").
+			Values("draft", "scheduled", "publishing", "retry_wait", "partially_published", "published", "failed", "cancelled", "deleting", "deletion_failed").
 			Default("draft"),
 		field.UUID("owner_id", uuid.UUID{}).
 			Immutable(),

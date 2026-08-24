@@ -2868,25 +2868,30 @@ func (m *PostMutation) ResetEdge(name string) error {
 // PostItemMutation represents an operation that mutates the PostItem nodes in the graph.
 type PostItemMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *uuid.UUID
-	position            *int
-	addposition         *int
-	text                *string
-	x_post_id           *string
-	published_at        *time.Time
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	post                *uuid.UUID
-	clearedpost         bool
-	media_assets        map[uuid.UUID]struct{}
-	removedmedia_assets map[uuid.UUID]struct{}
-	clearedmedia_assets bool
-	done                bool
-	oldValue            func(context.Context) (*PostItem, error)
-	predicates          []predicate.PostItem
+	op                    Op
+	typ                   string
+	id                    *uuid.UUID
+	position              *int
+	addposition           *int
+	text                  *string
+	x_post_id             *string
+	submission_state      *postitem.SubmissionState
+	submission_started_at *time.Time
+	outcome_confirmed_at  *time.Time
+	outcome_confirmed_by  *uuid.UUID
+	confirmed_x_post_url  *string
+	published_at          *time.Time
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	post                  *uuid.UUID
+	clearedpost           bool
+	media_assets          map[uuid.UUID]struct{}
+	removedmedia_assets   map[uuid.UUID]struct{}
+	clearedmedia_assets   bool
+	done                  bool
+	oldValue              func(context.Context) (*PostItem, error)
+	predicates            []predicate.PostItem
 }
 
 var _ ent.Mutation = (*PostItemMutation)(nil)
@@ -3170,6 +3175,238 @@ func (m *PostItemMutation) ResetXPostID() {
 	delete(m.clearedFields, postitem.FieldXPostID)
 }
 
+// SetSubmissionState sets the "submission_state" field.
+func (m *PostItemMutation) SetSubmissionState(ps postitem.SubmissionState) {
+	m.submission_state = &ps
+}
+
+// SubmissionState returns the value of the "submission_state" field in the mutation.
+func (m *PostItemMutation) SubmissionState() (r postitem.SubmissionState, exists bool) {
+	v := m.submission_state
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubmissionState returns the old "submission_state" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldSubmissionState(ctx context.Context) (v postitem.SubmissionState, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubmissionState is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubmissionState requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubmissionState: %w", err)
+	}
+	return oldValue.SubmissionState, nil
+}
+
+// ResetSubmissionState resets all changes to the "submission_state" field.
+func (m *PostItemMutation) ResetSubmissionState() {
+	m.submission_state = nil
+}
+
+// SetSubmissionStartedAt sets the "submission_started_at" field.
+func (m *PostItemMutation) SetSubmissionStartedAt(t time.Time) {
+	m.submission_started_at = &t
+}
+
+// SubmissionStartedAt returns the value of the "submission_started_at" field in the mutation.
+func (m *PostItemMutation) SubmissionStartedAt() (r time.Time, exists bool) {
+	v := m.submission_started_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubmissionStartedAt returns the old "submission_started_at" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldSubmissionStartedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubmissionStartedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubmissionStartedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubmissionStartedAt: %w", err)
+	}
+	return oldValue.SubmissionStartedAt, nil
+}
+
+// ClearSubmissionStartedAt clears the value of the "submission_started_at" field.
+func (m *PostItemMutation) ClearSubmissionStartedAt() {
+	m.submission_started_at = nil
+	m.clearedFields[postitem.FieldSubmissionStartedAt] = struct{}{}
+}
+
+// SubmissionStartedAtCleared returns if the "submission_started_at" field was cleared in this mutation.
+func (m *PostItemMutation) SubmissionStartedAtCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldSubmissionStartedAt]
+	return ok
+}
+
+// ResetSubmissionStartedAt resets all changes to the "submission_started_at" field.
+func (m *PostItemMutation) ResetSubmissionStartedAt() {
+	m.submission_started_at = nil
+	delete(m.clearedFields, postitem.FieldSubmissionStartedAt)
+}
+
+// SetOutcomeConfirmedAt sets the "outcome_confirmed_at" field.
+func (m *PostItemMutation) SetOutcomeConfirmedAt(t time.Time) {
+	m.outcome_confirmed_at = &t
+}
+
+// OutcomeConfirmedAt returns the value of the "outcome_confirmed_at" field in the mutation.
+func (m *PostItemMutation) OutcomeConfirmedAt() (r time.Time, exists bool) {
+	v := m.outcome_confirmed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcomeConfirmedAt returns the old "outcome_confirmed_at" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldOutcomeConfirmedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcomeConfirmedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcomeConfirmedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcomeConfirmedAt: %w", err)
+	}
+	return oldValue.OutcomeConfirmedAt, nil
+}
+
+// ClearOutcomeConfirmedAt clears the value of the "outcome_confirmed_at" field.
+func (m *PostItemMutation) ClearOutcomeConfirmedAt() {
+	m.outcome_confirmed_at = nil
+	m.clearedFields[postitem.FieldOutcomeConfirmedAt] = struct{}{}
+}
+
+// OutcomeConfirmedAtCleared returns if the "outcome_confirmed_at" field was cleared in this mutation.
+func (m *PostItemMutation) OutcomeConfirmedAtCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldOutcomeConfirmedAt]
+	return ok
+}
+
+// ResetOutcomeConfirmedAt resets all changes to the "outcome_confirmed_at" field.
+func (m *PostItemMutation) ResetOutcomeConfirmedAt() {
+	m.outcome_confirmed_at = nil
+	delete(m.clearedFields, postitem.FieldOutcomeConfirmedAt)
+}
+
+// SetOutcomeConfirmedBy sets the "outcome_confirmed_by" field.
+func (m *PostItemMutation) SetOutcomeConfirmedBy(u uuid.UUID) {
+	m.outcome_confirmed_by = &u
+}
+
+// OutcomeConfirmedBy returns the value of the "outcome_confirmed_by" field in the mutation.
+func (m *PostItemMutation) OutcomeConfirmedBy() (r uuid.UUID, exists bool) {
+	v := m.outcome_confirmed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcomeConfirmedBy returns the old "outcome_confirmed_by" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldOutcomeConfirmedBy(ctx context.Context) (v *uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcomeConfirmedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcomeConfirmedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcomeConfirmedBy: %w", err)
+	}
+	return oldValue.OutcomeConfirmedBy, nil
+}
+
+// ClearOutcomeConfirmedBy clears the value of the "outcome_confirmed_by" field.
+func (m *PostItemMutation) ClearOutcomeConfirmedBy() {
+	m.outcome_confirmed_by = nil
+	m.clearedFields[postitem.FieldOutcomeConfirmedBy] = struct{}{}
+}
+
+// OutcomeConfirmedByCleared returns if the "outcome_confirmed_by" field was cleared in this mutation.
+func (m *PostItemMutation) OutcomeConfirmedByCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldOutcomeConfirmedBy]
+	return ok
+}
+
+// ResetOutcomeConfirmedBy resets all changes to the "outcome_confirmed_by" field.
+func (m *PostItemMutation) ResetOutcomeConfirmedBy() {
+	m.outcome_confirmed_by = nil
+	delete(m.clearedFields, postitem.FieldOutcomeConfirmedBy)
+}
+
+// SetConfirmedXPostURL sets the "confirmed_x_post_url" field.
+func (m *PostItemMutation) SetConfirmedXPostURL(s string) {
+	m.confirmed_x_post_url = &s
+}
+
+// ConfirmedXPostURL returns the value of the "confirmed_x_post_url" field in the mutation.
+func (m *PostItemMutation) ConfirmedXPostURL() (r string, exists bool) {
+	v := m.confirmed_x_post_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfirmedXPostURL returns the old "confirmed_x_post_url" field's value of the PostItem entity.
+// If the PostItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostItemMutation) OldConfirmedXPostURL(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfirmedXPostURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfirmedXPostURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfirmedXPostURL: %w", err)
+	}
+	return oldValue.ConfirmedXPostURL, nil
+}
+
+// ClearConfirmedXPostURL clears the value of the "confirmed_x_post_url" field.
+func (m *PostItemMutation) ClearConfirmedXPostURL() {
+	m.confirmed_x_post_url = nil
+	m.clearedFields[postitem.FieldConfirmedXPostURL] = struct{}{}
+}
+
+// ConfirmedXPostURLCleared returns if the "confirmed_x_post_url" field was cleared in this mutation.
+func (m *PostItemMutation) ConfirmedXPostURLCleared() bool {
+	_, ok := m.clearedFields[postitem.FieldConfirmedXPostURL]
+	return ok
+}
+
+// ResetConfirmedXPostURL resets all changes to the "confirmed_x_post_url" field.
+func (m *PostItemMutation) ResetConfirmedXPostURL() {
+	m.confirmed_x_post_url = nil
+	delete(m.clearedFields, postitem.FieldConfirmedXPostURL)
+}
+
 // SetPublishedAt sets the "published_at" field.
 func (m *PostItemMutation) SetPublishedAt(t time.Time) {
 	m.published_at = &t
@@ -3406,7 +3643,7 @@ func (m *PostItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PostItemMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 12)
 	if m.position != nil {
 		fields = append(fields, postitem.FieldPosition)
 	}
@@ -3418,6 +3655,21 @@ func (m *PostItemMutation) Fields() []string {
 	}
 	if m.x_post_id != nil {
 		fields = append(fields, postitem.FieldXPostID)
+	}
+	if m.submission_state != nil {
+		fields = append(fields, postitem.FieldSubmissionState)
+	}
+	if m.submission_started_at != nil {
+		fields = append(fields, postitem.FieldSubmissionStartedAt)
+	}
+	if m.outcome_confirmed_at != nil {
+		fields = append(fields, postitem.FieldOutcomeConfirmedAt)
+	}
+	if m.outcome_confirmed_by != nil {
+		fields = append(fields, postitem.FieldOutcomeConfirmedBy)
+	}
+	if m.confirmed_x_post_url != nil {
+		fields = append(fields, postitem.FieldConfirmedXPostURL)
 	}
 	if m.published_at != nil {
 		fields = append(fields, postitem.FieldPublishedAt)
@@ -3444,6 +3696,16 @@ func (m *PostItemMutation) Field(name string) (ent.Value, bool) {
 		return m.Text()
 	case postitem.FieldXPostID:
 		return m.XPostID()
+	case postitem.FieldSubmissionState:
+		return m.SubmissionState()
+	case postitem.FieldSubmissionStartedAt:
+		return m.SubmissionStartedAt()
+	case postitem.FieldOutcomeConfirmedAt:
+		return m.OutcomeConfirmedAt()
+	case postitem.FieldOutcomeConfirmedBy:
+		return m.OutcomeConfirmedBy()
+	case postitem.FieldConfirmedXPostURL:
+		return m.ConfirmedXPostURL()
 	case postitem.FieldPublishedAt:
 		return m.PublishedAt()
 	case postitem.FieldCreatedAt:
@@ -3467,6 +3729,16 @@ func (m *PostItemMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldText(ctx)
 	case postitem.FieldXPostID:
 		return m.OldXPostID(ctx)
+	case postitem.FieldSubmissionState:
+		return m.OldSubmissionState(ctx)
+	case postitem.FieldSubmissionStartedAt:
+		return m.OldSubmissionStartedAt(ctx)
+	case postitem.FieldOutcomeConfirmedAt:
+		return m.OldOutcomeConfirmedAt(ctx)
+	case postitem.FieldOutcomeConfirmedBy:
+		return m.OldOutcomeConfirmedBy(ctx)
+	case postitem.FieldConfirmedXPostURL:
+		return m.OldConfirmedXPostURL(ctx)
 	case postitem.FieldPublishedAt:
 		return m.OldPublishedAt(ctx)
 	case postitem.FieldCreatedAt:
@@ -3509,6 +3781,41 @@ func (m *PostItemMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetXPostID(v)
+		return nil
+	case postitem.FieldSubmissionState:
+		v, ok := value.(postitem.SubmissionState)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubmissionState(v)
+		return nil
+	case postitem.FieldSubmissionStartedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubmissionStartedAt(v)
+		return nil
+	case postitem.FieldOutcomeConfirmedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcomeConfirmedAt(v)
+		return nil
+	case postitem.FieldOutcomeConfirmedBy:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcomeConfirmedBy(v)
+		return nil
+	case postitem.FieldConfirmedXPostURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfirmedXPostURL(v)
 		return nil
 	case postitem.FieldPublishedAt:
 		v, ok := value.(time.Time)
@@ -3579,6 +3886,18 @@ func (m *PostItemMutation) ClearedFields() []string {
 	if m.FieldCleared(postitem.FieldXPostID) {
 		fields = append(fields, postitem.FieldXPostID)
 	}
+	if m.FieldCleared(postitem.FieldSubmissionStartedAt) {
+		fields = append(fields, postitem.FieldSubmissionStartedAt)
+	}
+	if m.FieldCleared(postitem.FieldOutcomeConfirmedAt) {
+		fields = append(fields, postitem.FieldOutcomeConfirmedAt)
+	}
+	if m.FieldCleared(postitem.FieldOutcomeConfirmedBy) {
+		fields = append(fields, postitem.FieldOutcomeConfirmedBy)
+	}
+	if m.FieldCleared(postitem.FieldConfirmedXPostURL) {
+		fields = append(fields, postitem.FieldConfirmedXPostURL)
+	}
 	if m.FieldCleared(postitem.FieldPublishedAt) {
 		fields = append(fields, postitem.FieldPublishedAt)
 	}
@@ -3598,6 +3917,18 @@ func (m *PostItemMutation) ClearField(name string) error {
 	switch name {
 	case postitem.FieldXPostID:
 		m.ClearXPostID()
+		return nil
+	case postitem.FieldSubmissionStartedAt:
+		m.ClearSubmissionStartedAt()
+		return nil
+	case postitem.FieldOutcomeConfirmedAt:
+		m.ClearOutcomeConfirmedAt()
+		return nil
+	case postitem.FieldOutcomeConfirmedBy:
+		m.ClearOutcomeConfirmedBy()
+		return nil
+	case postitem.FieldConfirmedXPostURL:
+		m.ClearConfirmedXPostURL()
 		return nil
 	case postitem.FieldPublishedAt:
 		m.ClearPublishedAt()
@@ -3621,6 +3952,21 @@ func (m *PostItemMutation) ResetField(name string) error {
 		return nil
 	case postitem.FieldXPostID:
 		m.ResetXPostID()
+		return nil
+	case postitem.FieldSubmissionState:
+		m.ResetSubmissionState()
+		return nil
+	case postitem.FieldSubmissionStartedAt:
+		m.ResetSubmissionStartedAt()
+		return nil
+	case postitem.FieldOutcomeConfirmedAt:
+		m.ResetOutcomeConfirmedAt()
+		return nil
+	case postitem.FieldOutcomeConfirmedBy:
+		m.ResetOutcomeConfirmedBy()
+		return nil
+	case postitem.FieldConfirmedXPostURL:
+		m.ResetConfirmedXPostURL()
 		return nil
 	case postitem.FieldPublishedAt:
 		m.ResetPublishedAt()

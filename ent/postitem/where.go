@@ -76,6 +76,26 @@ func XPostID(v string) predicate.PostItem {
 	return predicate.PostItem(sql.FieldEQ(FieldXPostID, v))
 }
 
+// SubmissionStartedAt applies equality check predicate on the "submission_started_at" field. It's identical to SubmissionStartedAtEQ.
+func SubmissionStartedAt(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldSubmissionStartedAt, v))
+}
+
+// OutcomeConfirmedAt applies equality check predicate on the "outcome_confirmed_at" field. It's identical to OutcomeConfirmedAtEQ.
+func OutcomeConfirmedAt(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedBy applies equality check predicate on the "outcome_confirmed_by" field. It's identical to OutcomeConfirmedByEQ.
+func OutcomeConfirmedBy(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldOutcomeConfirmedBy, v))
+}
+
+// ConfirmedXPostURL applies equality check predicate on the "confirmed_x_post_url" field. It's identical to ConfirmedXPostURLEQ.
+func ConfirmedXPostURL(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldConfirmedXPostURL, v))
+}
+
 // PublishedAt applies equality check predicate on the "published_at" field. It's identical to PublishedAtEQ.
 func PublishedAt(v time.Time) predicate.PostItem {
 	return predicate.PostItem(sql.FieldEQ(FieldPublishedAt, v))
@@ -289,6 +309,251 @@ func XPostIDEqualFold(v string) predicate.PostItem {
 // XPostIDContainsFold applies the ContainsFold predicate on the "x_post_id" field.
 func XPostIDContainsFold(v string) predicate.PostItem {
 	return predicate.PostItem(sql.FieldContainsFold(FieldXPostID, v))
+}
+
+// SubmissionStateEQ applies the EQ predicate on the "submission_state" field.
+func SubmissionStateEQ(v SubmissionState) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldSubmissionState, v))
+}
+
+// SubmissionStateNEQ applies the NEQ predicate on the "submission_state" field.
+func SubmissionStateNEQ(v SubmissionState) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNEQ(FieldSubmissionState, v))
+}
+
+// SubmissionStateIn applies the In predicate on the "submission_state" field.
+func SubmissionStateIn(vs ...SubmissionState) predicate.PostItem {
+	return predicate.PostItem(sql.FieldIn(FieldSubmissionState, vs...))
+}
+
+// SubmissionStateNotIn applies the NotIn predicate on the "submission_state" field.
+func SubmissionStateNotIn(vs ...SubmissionState) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotIn(FieldSubmissionState, vs...))
+}
+
+// SubmissionStartedAtEQ applies the EQ predicate on the "submission_started_at" field.
+func SubmissionStartedAtEQ(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtNEQ applies the NEQ predicate on the "submission_started_at" field.
+func SubmissionStartedAtNEQ(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNEQ(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtIn applies the In predicate on the "submission_started_at" field.
+func SubmissionStartedAtIn(vs ...time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldIn(FieldSubmissionStartedAt, vs...))
+}
+
+// SubmissionStartedAtNotIn applies the NotIn predicate on the "submission_started_at" field.
+func SubmissionStartedAtNotIn(vs ...time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotIn(FieldSubmissionStartedAt, vs...))
+}
+
+// SubmissionStartedAtGT applies the GT predicate on the "submission_started_at" field.
+func SubmissionStartedAtGT(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGT(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtGTE applies the GTE predicate on the "submission_started_at" field.
+func SubmissionStartedAtGTE(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGTE(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtLT applies the LT predicate on the "submission_started_at" field.
+func SubmissionStartedAtLT(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLT(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtLTE applies the LTE predicate on the "submission_started_at" field.
+func SubmissionStartedAtLTE(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLTE(FieldSubmissionStartedAt, v))
+}
+
+// SubmissionStartedAtIsNil applies the IsNil predicate on the "submission_started_at" field.
+func SubmissionStartedAtIsNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldIsNull(FieldSubmissionStartedAt))
+}
+
+// SubmissionStartedAtNotNil applies the NotNil predicate on the "submission_started_at" field.
+func SubmissionStartedAtNotNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotNull(FieldSubmissionStartedAt))
+}
+
+// OutcomeConfirmedAtEQ applies the EQ predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtEQ(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtNEQ applies the NEQ predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtNEQ(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNEQ(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtIn applies the In predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtIn(vs ...time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldIn(FieldOutcomeConfirmedAt, vs...))
+}
+
+// OutcomeConfirmedAtNotIn applies the NotIn predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtNotIn(vs ...time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotIn(FieldOutcomeConfirmedAt, vs...))
+}
+
+// OutcomeConfirmedAtGT applies the GT predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtGT(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGT(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtGTE applies the GTE predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtGTE(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGTE(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtLT applies the LT predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtLT(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLT(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtLTE applies the LTE predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtLTE(v time.Time) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLTE(FieldOutcomeConfirmedAt, v))
+}
+
+// OutcomeConfirmedAtIsNil applies the IsNil predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtIsNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldIsNull(FieldOutcomeConfirmedAt))
+}
+
+// OutcomeConfirmedAtNotNil applies the NotNil predicate on the "outcome_confirmed_at" field.
+func OutcomeConfirmedAtNotNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotNull(FieldOutcomeConfirmedAt))
+}
+
+// OutcomeConfirmedByEQ applies the EQ predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByEQ(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByNEQ applies the NEQ predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByNEQ(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNEQ(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByIn applies the In predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByIn(vs ...uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldIn(FieldOutcomeConfirmedBy, vs...))
+}
+
+// OutcomeConfirmedByNotIn applies the NotIn predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByNotIn(vs ...uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotIn(FieldOutcomeConfirmedBy, vs...))
+}
+
+// OutcomeConfirmedByGT applies the GT predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByGT(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGT(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByGTE applies the GTE predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByGTE(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGTE(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByLT applies the LT predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByLT(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLT(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByLTE applies the LTE predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByLTE(v uuid.UUID) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLTE(FieldOutcomeConfirmedBy, v))
+}
+
+// OutcomeConfirmedByIsNil applies the IsNil predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByIsNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldIsNull(FieldOutcomeConfirmedBy))
+}
+
+// OutcomeConfirmedByNotNil applies the NotNil predicate on the "outcome_confirmed_by" field.
+func OutcomeConfirmedByNotNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotNull(FieldOutcomeConfirmedBy))
+}
+
+// ConfirmedXPostURLEQ applies the EQ predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLEQ(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEQ(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLNEQ applies the NEQ predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLNEQ(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNEQ(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLIn applies the In predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLIn(vs ...string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldIn(FieldConfirmedXPostURL, vs...))
+}
+
+// ConfirmedXPostURLNotIn applies the NotIn predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLNotIn(vs ...string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotIn(FieldConfirmedXPostURL, vs...))
+}
+
+// ConfirmedXPostURLGT applies the GT predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLGT(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGT(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLGTE applies the GTE predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLGTE(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldGTE(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLLT applies the LT predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLLT(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLT(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLLTE applies the LTE predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLLTE(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldLTE(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLContains applies the Contains predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLContains(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldContains(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLHasPrefix applies the HasPrefix predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLHasPrefix(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldHasPrefix(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLHasSuffix applies the HasSuffix predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLHasSuffix(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldHasSuffix(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLIsNil applies the IsNil predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLIsNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldIsNull(FieldConfirmedXPostURL))
+}
+
+// ConfirmedXPostURLNotNil applies the NotNil predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLNotNil() predicate.PostItem {
+	return predicate.PostItem(sql.FieldNotNull(FieldConfirmedXPostURL))
+}
+
+// ConfirmedXPostURLEqualFold applies the EqualFold predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLEqualFold(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldEqualFold(FieldConfirmedXPostURL, v))
+}
+
+// ConfirmedXPostURLContainsFold applies the ContainsFold predicate on the "confirmed_x_post_url" field.
+func ConfirmedXPostURLContainsFold(v string) predicate.PostItem {
+	return predicate.PostItem(sql.FieldContainsFold(FieldConfirmedXPostURL, v))
 }
 
 // PublishedAtEQ applies the EQ predicate on the "published_at" field.

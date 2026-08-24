@@ -122,12 +122,16 @@ func init() {
 	postitemDescText := postitemFields[3].Descriptor()
 	// postitem.DefaultText holds the default value on creation for the text field.
 	postitem.DefaultText = postitemDescText.Default.(string)
+	// postitemDescConfirmedXPostURL is the schema descriptor for confirmed_x_post_url field.
+	postitemDescConfirmedXPostURL := postitemFields[9].Descriptor()
+	// postitem.ConfirmedXPostURLValidator is a validator for the "confirmed_x_post_url" field. It is called by the builders before save.
+	postitem.ConfirmedXPostURLValidator = postitemDescConfirmedXPostURL.Validators[0].(func(string) error)
 	// postitemDescCreatedAt is the schema descriptor for created_at field.
-	postitemDescCreatedAt := postitemFields[6].Descriptor()
+	postitemDescCreatedAt := postitemFields[11].Descriptor()
 	// postitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	postitem.DefaultCreatedAt = postitemDescCreatedAt.Default.(func() time.Time)
 	// postitemDescUpdatedAt is the schema descriptor for updated_at field.
-	postitemDescUpdatedAt := postitemFields[7].Descriptor()
+	postitemDescUpdatedAt := postitemFields[12].Descriptor()
 	// postitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	postitem.DefaultUpdatedAt = postitemDescUpdatedAt.Default.(func() time.Time)
 	// postitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

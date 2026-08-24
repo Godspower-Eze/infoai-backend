@@ -13,8 +13,8 @@ func TestMigrationsContainInitialAndPublishingSchemas(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Glob() error = %v", err)
 	}
-	if len(files) != 3 {
-		t.Fatalf("migration file count = %d, want 3", len(files))
+	if len(files) != 4 {
+		t.Fatalf("migration file count = %d, want 4", len(files))
 	}
 	if !regexp.MustCompile(`/[0-9]{14}_initial_schema\.sql$`).MatchString(filepath.ToSlash(files[0])) {
 		t.Fatalf("migration name = %q, want timestamped initial_schema file", files[0])
@@ -24,6 +24,9 @@ func TestMigrationsContainInitialAndPublishingSchemas(t *testing.T) {
 	}
 	if !regexp.MustCompile(`/[0-9]{14}_add_x_subscription_metadata\.sql$`).MatchString(filepath.ToSlash(files[2])) {
 		t.Fatalf("migration name = %q, want timestamped add_x_subscription_metadata file", files[2])
+	}
+	if !regexp.MustCompile(`/[0-9]{14}_refine_post_publishing_state\.sql$`).MatchString(filepath.ToSlash(files[3])) {
+		t.Fatalf("migration name = %q, want timestamped refine_post_publishing_state file", files[3])
 	}
 
 	initialContents, err := os.ReadFile(files[0])
@@ -53,6 +56,22 @@ func TestMigrationsContainInitialAndPublishingSchemas(t *testing.T) {
 	for _, column := range []string{"subscription_type", "subscription_checked_at"} {
 		if !strings.Contains(string(subscriptionContents), `ADD COLUMN "`+column+`"`) {
 			t.Errorf("subscription migration does not add %s column", column)
+		}
+	}
+
+	recoveryContents, err := os.ReadFile(files[3])
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	for _, column := range []string{
+		"submission_state",
+		"submission_started_at",
+		"outcome_confirmed_at",
+		"outcome_confirmed_by",
+		"confirmed_x_post_url",
+	} {
+		if !strings.Contains(string(recoveryContents), `ADD COLUMN "`+column+`"`) {
+			t.Errorf("publishing recovery migration does not add %s column", column)
 		}
 	}
 

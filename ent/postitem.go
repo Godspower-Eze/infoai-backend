@@ -27,6 +27,16 @@ type PostItem struct {
 	Text string `json:"text,omitempty"`
 	// XPostID holds the value of the "x_post_id" field.
 	XPostID *string `json:"x_post_id,omitempty"`
+	// SubmissionState holds the value of the "submission_state" field.
+	SubmissionState postitem.SubmissionState `json:"submission_state,omitempty"`
+	// SubmissionStartedAt holds the value of the "submission_started_at" field.
+	SubmissionStartedAt *time.Time `json:"submission_started_at,omitempty"`
+	// OutcomeConfirmedAt holds the value of the "outcome_confirmed_at" field.
+	OutcomeConfirmedAt *time.Time `json:"outcome_confirmed_at,omitempty"`
+	// OutcomeConfirmedBy holds the value of the "outcome_confirmed_by" field.
+	OutcomeConfirmedBy *uuid.UUID `json:"outcome_confirmed_by,omitempty"`
+	// ConfirmedXPostURL holds the value of the "confirmed_x_post_url" field.
+	ConfirmedXPostURL *string `json:"confirmed_x_post_url,omitempty"`
 	// PublishedAt holds the value of the "published_at" field.
 	PublishedAt *time.Time `json:"published_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -75,11 +85,13 @@ func (*PostItem) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case postitem.FieldOutcomeConfirmedBy:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case postitem.FieldPosition:
 			values[i] = new(sql.NullInt64)
-		case postitem.FieldText, postitem.FieldXPostID:
+		case postitem.FieldText, postitem.FieldXPostID, postitem.FieldSubmissionState, postitem.FieldConfirmedXPostURL:
 			values[i] = new(sql.NullString)
-		case postitem.FieldPublishedAt, postitem.FieldCreatedAt, postitem.FieldUpdatedAt:
+		case postitem.FieldSubmissionStartedAt, postitem.FieldOutcomeConfirmedAt, postitem.FieldPublishedAt, postitem.FieldCreatedAt, postitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case postitem.FieldID, postitem.FieldPostID:
 			values[i] = new(uuid.UUID)
@@ -128,6 +140,40 @@ func (_m *PostItem) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.XPostID = new(string)
 				*_m.XPostID = value.String
+			}
+		case postitem.FieldSubmissionState:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field submission_state", values[i])
+			} else if value.Valid {
+				_m.SubmissionState = postitem.SubmissionState(value.String)
+			}
+		case postitem.FieldSubmissionStartedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field submission_started_at", values[i])
+			} else if value.Valid {
+				_m.SubmissionStartedAt = new(time.Time)
+				*_m.SubmissionStartedAt = value.Time
+			}
+		case postitem.FieldOutcomeConfirmedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field outcome_confirmed_at", values[i])
+			} else if value.Valid {
+				_m.OutcomeConfirmedAt = new(time.Time)
+				*_m.OutcomeConfirmedAt = value.Time
+			}
+		case postitem.FieldOutcomeConfirmedBy:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field outcome_confirmed_by", values[i])
+			} else if value.Valid {
+				_m.OutcomeConfirmedBy = new(uuid.UUID)
+				*_m.OutcomeConfirmedBy = *value.S.(*uuid.UUID)
+			}
+		case postitem.FieldConfirmedXPostURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field confirmed_x_post_url", values[i])
+			} else if value.Valid {
+				_m.ConfirmedXPostURL = new(string)
+				*_m.ConfirmedXPostURL = value.String
 			}
 		case postitem.FieldPublishedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -205,6 +251,29 @@ func (_m *PostItem) String() string {
 	builder.WriteString(", ")
 	if v := _m.XPostID; v != nil {
 		builder.WriteString("x_post_id=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("submission_state=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SubmissionState))
+	builder.WriteString(", ")
+	if v := _m.SubmissionStartedAt; v != nil {
+		builder.WriteString("submission_started_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.OutcomeConfirmedAt; v != nil {
+		builder.WriteString("outcome_confirmed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.OutcomeConfirmedBy; v != nil {
+		builder.WriteString("outcome_confirmed_by=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.ConfirmedXPostURL; v != nil {
+		builder.WriteString("confirmed_x_post_url=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

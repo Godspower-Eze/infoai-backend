@@ -141,6 +141,40 @@ func TestPostSchemaDefinesLifecycleOwnershipAndLease(t *testing.T) {
 	requireOwnedEdge(t, (Post{}).Edges(), "x_account")
 }
 
+func TestPostSchemaIncludesDurableDeletionStates(t *testing.T) {
+	status := fieldsByName((Post{}).Fields())["status"]
+	if status == nil {
+		t.Fatal("post status field is missing")
+	}
+	hasDeleting := slices.ContainsFunc(status.Enums, func(value struct{ N, V string }) bool {
+		return value.V == "deleting"
+	})
+	hasDeletionFailed := slices.ContainsFunc(status.Enums, func(value struct{ N, V string }) bool {
+		return value.V == "deletion_failed"
+	})
+	if !hasDeleting || !hasDeletionFailed {
+		t.Fatal("post status must include deleting and deletion_failed")
+	}
+}
+
+func TestPostItemSchemaCapturesAmbiguousSubmissionResolution(t *testing.T) {
+	fields := fieldsByName((PostItem{}).Fields())
+	state := fields["submission_state"]
+	if state == nil || state.Default == nil {
+		t.Fatal("submission_state must default to not_started")
+	}
+	for _, name := range []string{
+		"submission_started_at",
+		"outcome_confirmed_at",
+		"outcome_confirmed_by",
+		"confirmed_x_post_url",
+	} {
+		if descriptor := fields[name]; descriptor == nil || !descriptor.Optional || !descriptor.Nillable {
+			t.Fatalf("%s must be nullable", name)
+		}
+	}
+}
+
 func TestPostChildrenUseStableOrderingAndSafeMetadata(t *testing.T) {
 	requireImmutableUUID(t, (PostItem{}).Fields())
 	requireImmutableUUID(t, (MediaAsset{}).Fields())

@@ -191,6 +191,8 @@ const (
 	StatusPublished          Status = "published"
 	StatusFailed             Status = "failed"
 	StatusCancelled          Status = "cancelled"
+	StatusDeleting           Status = "deleting"
+	StatusDeletionFailed     Status = "deletion_failed"
 )
 
 func (s Status) String() string {
@@ -200,7 +202,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusDraft, StatusScheduled, StatusPublishing, StatusRetryWait, StatusPartiallyPublished, StatusPublished, StatusFailed, StatusCancelled:
+	case StatusDraft, StatusScheduled, StatusPublishing, StatusRetryWait, StatusPartiallyPublished, StatusPublished, StatusFailed, StatusCancelled, StatusDeleting, StatusDeletionFailed:
 		return nil
 	default:
 		return fmt.Errorf("post: invalid enum value for status field: %q", s)

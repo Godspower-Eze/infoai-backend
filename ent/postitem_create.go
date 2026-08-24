@@ -63,6 +63,76 @@ func (_c *PostItemCreate) SetNillableXPostID(v *string) *PostItemCreate {
 	return _c
 }
 
+// SetSubmissionState sets the "submission_state" field.
+func (_c *PostItemCreate) SetSubmissionState(v postitem.SubmissionState) *PostItemCreate {
+	_c.mutation.SetSubmissionState(v)
+	return _c
+}
+
+// SetNillableSubmissionState sets the "submission_state" field if the given value is not nil.
+func (_c *PostItemCreate) SetNillableSubmissionState(v *postitem.SubmissionState) *PostItemCreate {
+	if v != nil {
+		_c.SetSubmissionState(*v)
+	}
+	return _c
+}
+
+// SetSubmissionStartedAt sets the "submission_started_at" field.
+func (_c *PostItemCreate) SetSubmissionStartedAt(v time.Time) *PostItemCreate {
+	_c.mutation.SetSubmissionStartedAt(v)
+	return _c
+}
+
+// SetNillableSubmissionStartedAt sets the "submission_started_at" field if the given value is not nil.
+func (_c *PostItemCreate) SetNillableSubmissionStartedAt(v *time.Time) *PostItemCreate {
+	if v != nil {
+		_c.SetSubmissionStartedAt(*v)
+	}
+	return _c
+}
+
+// SetOutcomeConfirmedAt sets the "outcome_confirmed_at" field.
+func (_c *PostItemCreate) SetOutcomeConfirmedAt(v time.Time) *PostItemCreate {
+	_c.mutation.SetOutcomeConfirmedAt(v)
+	return _c
+}
+
+// SetNillableOutcomeConfirmedAt sets the "outcome_confirmed_at" field if the given value is not nil.
+func (_c *PostItemCreate) SetNillableOutcomeConfirmedAt(v *time.Time) *PostItemCreate {
+	if v != nil {
+		_c.SetOutcomeConfirmedAt(*v)
+	}
+	return _c
+}
+
+// SetOutcomeConfirmedBy sets the "outcome_confirmed_by" field.
+func (_c *PostItemCreate) SetOutcomeConfirmedBy(v uuid.UUID) *PostItemCreate {
+	_c.mutation.SetOutcomeConfirmedBy(v)
+	return _c
+}
+
+// SetNillableOutcomeConfirmedBy sets the "outcome_confirmed_by" field if the given value is not nil.
+func (_c *PostItemCreate) SetNillableOutcomeConfirmedBy(v *uuid.UUID) *PostItemCreate {
+	if v != nil {
+		_c.SetOutcomeConfirmedBy(*v)
+	}
+	return _c
+}
+
+// SetConfirmedXPostURL sets the "confirmed_x_post_url" field.
+func (_c *PostItemCreate) SetConfirmedXPostURL(v string) *PostItemCreate {
+	_c.mutation.SetConfirmedXPostURL(v)
+	return _c
+}
+
+// SetNillableConfirmedXPostURL sets the "confirmed_x_post_url" field if the given value is not nil.
+func (_c *PostItemCreate) SetNillableConfirmedXPostURL(v *string) *PostItemCreate {
+	if v != nil {
+		_c.SetConfirmedXPostURL(*v)
+	}
+	return _c
+}
+
 // SetPublishedAt sets the "published_at" field.
 func (_c *PostItemCreate) SetPublishedAt(v time.Time) *PostItemCreate {
 	_c.mutation.SetPublishedAt(v)
@@ -178,6 +248,10 @@ func (_c *PostItemCreate) defaults() {
 		v := postitem.DefaultText
 		_c.mutation.SetText(v)
 	}
+	if _, ok := _c.mutation.SubmissionState(); !ok {
+		v := postitem.DefaultSubmissionState
+		_c.mutation.SetSubmissionState(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := postitem.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -207,6 +281,19 @@ func (_c *PostItemCreate) check() error {
 	}
 	if _, ok := _c.mutation.Text(); !ok {
 		return &ValidationError{Name: "text", err: errors.New(`ent: missing required field "PostItem.text"`)}
+	}
+	if _, ok := _c.mutation.SubmissionState(); !ok {
+		return &ValidationError{Name: "submission_state", err: errors.New(`ent: missing required field "PostItem.submission_state"`)}
+	}
+	if v, ok := _c.mutation.SubmissionState(); ok {
+		if err := postitem.SubmissionStateValidator(v); err != nil {
+			return &ValidationError{Name: "submission_state", err: fmt.Errorf(`ent: validator failed for field "PostItem.submission_state": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.ConfirmedXPostURL(); ok {
+		if err := postitem.ConfirmedXPostURLValidator(v); err != nil {
+			return &ValidationError{Name: "confirmed_x_post_url", err: fmt.Errorf(`ent: validator failed for field "PostItem.confirmed_x_post_url": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "PostItem.created_at"`)}
@@ -263,6 +350,26 @@ func (_c *PostItemCreate) createSpec() (*PostItem, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.XPostID(); ok {
 		_spec.SetField(postitem.FieldXPostID, field.TypeString, value)
 		_node.XPostID = &value
+	}
+	if value, ok := _c.mutation.SubmissionState(); ok {
+		_spec.SetField(postitem.FieldSubmissionState, field.TypeEnum, value)
+		_node.SubmissionState = value
+	}
+	if value, ok := _c.mutation.SubmissionStartedAt(); ok {
+		_spec.SetField(postitem.FieldSubmissionStartedAt, field.TypeTime, value)
+		_node.SubmissionStartedAt = &value
+	}
+	if value, ok := _c.mutation.OutcomeConfirmedAt(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedAt, field.TypeTime, value)
+		_node.OutcomeConfirmedAt = &value
+	}
+	if value, ok := _c.mutation.OutcomeConfirmedBy(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedBy, field.TypeUUID, value)
+		_node.OutcomeConfirmedBy = &value
+	}
+	if value, ok := _c.mutation.ConfirmedXPostURL(); ok {
+		_spec.SetField(postitem.FieldConfirmedXPostURL, field.TypeString, value)
+		_node.ConfirmedXPostURL = &value
 	}
 	if value, ok := _c.mutation.PublishedAt(); ok {
 		_spec.SetField(postitem.FieldPublishedAt, field.TypeTime, value)

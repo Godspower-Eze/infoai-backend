@@ -3,6 +3,7 @@
 package postitem
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -23,6 +24,16 @@ const (
 	FieldText = "text"
 	// FieldXPostID holds the string denoting the x_post_id field in the database.
 	FieldXPostID = "x_post_id"
+	// FieldSubmissionState holds the string denoting the submission_state field in the database.
+	FieldSubmissionState = "submission_state"
+	// FieldSubmissionStartedAt holds the string denoting the submission_started_at field in the database.
+	FieldSubmissionStartedAt = "submission_started_at"
+	// FieldOutcomeConfirmedAt holds the string denoting the outcome_confirmed_at field in the database.
+	FieldOutcomeConfirmedAt = "outcome_confirmed_at"
+	// FieldOutcomeConfirmedBy holds the string denoting the outcome_confirmed_by field in the database.
+	FieldOutcomeConfirmedBy = "outcome_confirmed_by"
+	// FieldConfirmedXPostURL holds the string denoting the confirmed_x_post_url field in the database.
+	FieldConfirmedXPostURL = "confirmed_x_post_url"
 	// FieldPublishedAt holds the string denoting the published_at field in the database.
 	FieldPublishedAt = "published_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -58,6 +69,11 @@ var Columns = []string{
 	FieldPostID,
 	FieldText,
 	FieldXPostID,
+	FieldSubmissionState,
+	FieldSubmissionStartedAt,
+	FieldOutcomeConfirmedAt,
+	FieldOutcomeConfirmedBy,
+	FieldConfirmedXPostURL,
 	FieldPublishedAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -78,6 +94,8 @@ var (
 	PositionValidator func(int) error
 	// DefaultText holds the default value on creation for the "text" field.
 	DefaultText string
+	// ConfirmedXPostURLValidator is a validator for the "confirmed_x_post_url" field. It is called by the builders before save.
+	ConfirmedXPostURLValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -87,6 +105,34 @@ var (
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
+
+// SubmissionState defines the type for the "submission_state" enum field.
+type SubmissionState string
+
+// SubmissionStateNotStarted is the default value of the SubmissionState enum.
+const DefaultSubmissionState = SubmissionStateNotStarted
+
+// SubmissionState values.
+const (
+	SubmissionStateNotStarted     SubmissionState = "not_started"
+	SubmissionStateSubmitting     SubmissionState = "submitting"
+	SubmissionStatePublished      SubmissionState = "published"
+	SubmissionStateOutcomeUnknown SubmissionState = "outcome_unknown"
+)
+
+func (ss SubmissionState) String() string {
+	return string(ss)
+}
+
+// SubmissionStateValidator is a validator for the "submission_state" field enum values. It is called by the builders before save.
+func SubmissionStateValidator(ss SubmissionState) error {
+	switch ss {
+	case SubmissionStateNotStarted, SubmissionStateSubmitting, SubmissionStatePublished, SubmissionStateOutcomeUnknown:
+		return nil
+	default:
+		return fmt.Errorf("postitem: invalid enum value for submission_state field: %q", ss)
+	}
+}
 
 // OrderOption defines the ordering options for the PostItem queries.
 type OrderOption func(*sql.Selector)
@@ -114,6 +160,31 @@ func ByText(opts ...sql.OrderTermOption) OrderOption {
 // ByXPostID orders the results by the x_post_id field.
 func ByXPostID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldXPostID, opts...).ToFunc()
+}
+
+// BySubmissionState orders the results by the submission_state field.
+func BySubmissionState(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubmissionState, opts...).ToFunc()
+}
+
+// BySubmissionStartedAt orders the results by the submission_started_at field.
+func BySubmissionStartedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubmissionStartedAt, opts...).ToFunc()
+}
+
+// ByOutcomeConfirmedAt orders the results by the outcome_confirmed_at field.
+func ByOutcomeConfirmedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOutcomeConfirmedAt, opts...).ToFunc()
+}
+
+// ByOutcomeConfirmedBy orders the results by the outcome_confirmed_by field.
+func ByOutcomeConfirmedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOutcomeConfirmedBy, opts...).ToFunc()
+}
+
+// ByConfirmedXPostURL orders the results by the confirmed_x_post_url field.
+func ByConfirmedXPostURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConfirmedXPostURL, opts...).ToFunc()
 }
 
 // ByPublishedAt orders the results by the published_at field.

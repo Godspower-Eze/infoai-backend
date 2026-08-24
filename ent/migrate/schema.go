@@ -54,7 +54,7 @@ var (
 	PostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "creation_mode", Type: field.TypeEnum, Enums: []string{"user", "agent"}},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "scheduled", "publishing", "retry_wait", "partially_published", "published", "failed", "cancelled"}, Default: "draft"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "scheduled", "publishing", "retry_wait", "partially_published", "published", "failed", "cancelled", "deleting", "deletion_failed"}, Default: "draft"},
 		{Name: "scheduled_at", Type: field.TypeTime, Nullable: true},
 		{Name: "publish_requested_at", Type: field.TypeTime, Nullable: true},
 		{Name: "published_at", Type: field.TypeTime, Nullable: true},
@@ -120,6 +120,11 @@ var (
 		{Name: "position", Type: field.TypeInt},
 		{Name: "text", Type: field.TypeString, Default: ""},
 		{Name: "x_post_id", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "submission_state", Type: field.TypeEnum, Enums: []string{"not_started", "submitting", "published", "outcome_unknown"}, Default: "not_started"},
+		{Name: "submission_started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "outcome_confirmed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "outcome_confirmed_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "confirmed_x_post_url", Type: field.TypeString, Nullable: true, Size: 2048},
 		{Name: "published_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -133,7 +138,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "post_items_posts_items",
-				Columns:    []*schema.Column{PostItemsColumns[7]},
+				Columns:    []*schema.Column{PostItemsColumns[12]},
 				RefColumns: []*schema.Column{PostsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -142,7 +147,7 @@ var (
 			{
 				Name:    "postitem_post_id_position",
 				Unique:  true,
-				Columns: []*schema.Column{PostItemsColumns[7], PostItemsColumns[1]},
+				Columns: []*schema.Column{PostItemsColumns[12], PostItemsColumns[1]},
 			},
 		},
 	}

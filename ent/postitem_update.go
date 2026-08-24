@@ -85,6 +85,100 @@ func (_u *PostItemUpdate) ClearXPostID() *PostItemUpdate {
 	return _u
 }
 
+// SetSubmissionState sets the "submission_state" field.
+func (_u *PostItemUpdate) SetSubmissionState(v postitem.SubmissionState) *PostItemUpdate {
+	_u.mutation.SetSubmissionState(v)
+	return _u
+}
+
+// SetNillableSubmissionState sets the "submission_state" field if the given value is not nil.
+func (_u *PostItemUpdate) SetNillableSubmissionState(v *postitem.SubmissionState) *PostItemUpdate {
+	if v != nil {
+		_u.SetSubmissionState(*v)
+	}
+	return _u
+}
+
+// SetSubmissionStartedAt sets the "submission_started_at" field.
+func (_u *PostItemUpdate) SetSubmissionStartedAt(v time.Time) *PostItemUpdate {
+	_u.mutation.SetSubmissionStartedAt(v)
+	return _u
+}
+
+// SetNillableSubmissionStartedAt sets the "submission_started_at" field if the given value is not nil.
+func (_u *PostItemUpdate) SetNillableSubmissionStartedAt(v *time.Time) *PostItemUpdate {
+	if v != nil {
+		_u.SetSubmissionStartedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubmissionStartedAt clears the value of the "submission_started_at" field.
+func (_u *PostItemUpdate) ClearSubmissionStartedAt() *PostItemUpdate {
+	_u.mutation.ClearSubmissionStartedAt()
+	return _u
+}
+
+// SetOutcomeConfirmedAt sets the "outcome_confirmed_at" field.
+func (_u *PostItemUpdate) SetOutcomeConfirmedAt(v time.Time) *PostItemUpdate {
+	_u.mutation.SetOutcomeConfirmedAt(v)
+	return _u
+}
+
+// SetNillableOutcomeConfirmedAt sets the "outcome_confirmed_at" field if the given value is not nil.
+func (_u *PostItemUpdate) SetNillableOutcomeConfirmedAt(v *time.Time) *PostItemUpdate {
+	if v != nil {
+		_u.SetOutcomeConfirmedAt(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeConfirmedAt clears the value of the "outcome_confirmed_at" field.
+func (_u *PostItemUpdate) ClearOutcomeConfirmedAt() *PostItemUpdate {
+	_u.mutation.ClearOutcomeConfirmedAt()
+	return _u
+}
+
+// SetOutcomeConfirmedBy sets the "outcome_confirmed_by" field.
+func (_u *PostItemUpdate) SetOutcomeConfirmedBy(v uuid.UUID) *PostItemUpdate {
+	_u.mutation.SetOutcomeConfirmedBy(v)
+	return _u
+}
+
+// SetNillableOutcomeConfirmedBy sets the "outcome_confirmed_by" field if the given value is not nil.
+func (_u *PostItemUpdate) SetNillableOutcomeConfirmedBy(v *uuid.UUID) *PostItemUpdate {
+	if v != nil {
+		_u.SetOutcomeConfirmedBy(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeConfirmedBy clears the value of the "outcome_confirmed_by" field.
+func (_u *PostItemUpdate) ClearOutcomeConfirmedBy() *PostItemUpdate {
+	_u.mutation.ClearOutcomeConfirmedBy()
+	return _u
+}
+
+// SetConfirmedXPostURL sets the "confirmed_x_post_url" field.
+func (_u *PostItemUpdate) SetConfirmedXPostURL(v string) *PostItemUpdate {
+	_u.mutation.SetConfirmedXPostURL(v)
+	return _u
+}
+
+// SetNillableConfirmedXPostURL sets the "confirmed_x_post_url" field if the given value is not nil.
+func (_u *PostItemUpdate) SetNillableConfirmedXPostURL(v *string) *PostItemUpdate {
+	if v != nil {
+		_u.SetConfirmedXPostURL(*v)
+	}
+	return _u
+}
+
+// ClearConfirmedXPostURL clears the value of the "confirmed_x_post_url" field.
+func (_u *PostItemUpdate) ClearConfirmedXPostURL() *PostItemUpdate {
+	_u.mutation.ClearConfirmedXPostURL()
+	return _u
+}
+
 // SetPublishedAt sets the "published_at" field.
 func (_u *PostItemUpdate) SetPublishedAt(v time.Time) *PostItemUpdate {
 	_u.mutation.SetPublishedAt(v)
@@ -195,6 +289,16 @@ func (_u *PostItemUpdate) check() error {
 			return &ValidationError{Name: "position", err: fmt.Errorf(`ent: validator failed for field "PostItem.position": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SubmissionState(); ok {
+		if err := postitem.SubmissionStateValidator(v); err != nil {
+			return &ValidationError{Name: "submission_state", err: fmt.Errorf(`ent: validator failed for field "PostItem.submission_state": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ConfirmedXPostURL(); ok {
+		if err := postitem.ConfirmedXPostURLValidator(v); err != nil {
+			return &ValidationError{Name: "confirmed_x_post_url", err: fmt.Errorf(`ent: validator failed for field "PostItem.confirmed_x_post_url": %w`, err)}
+		}
+	}
 	if _u.mutation.PostCleared() && len(_u.mutation.PostIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PostItem.post"`)
 	}
@@ -227,6 +331,33 @@ func (_u *PostItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.XPostIDCleared() {
 		_spec.ClearField(postitem.FieldXPostID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SubmissionState(); ok {
+		_spec.SetField(postitem.FieldSubmissionState, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SubmissionStartedAt(); ok {
+		_spec.SetField(postitem.FieldSubmissionStartedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubmissionStartedAtCleared() {
+		_spec.ClearField(postitem.FieldSubmissionStartedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.OutcomeConfirmedAt(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedAt, field.TypeTime, value)
+	}
+	if _u.mutation.OutcomeConfirmedAtCleared() {
+		_spec.ClearField(postitem.FieldOutcomeConfirmedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.OutcomeConfirmedBy(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.OutcomeConfirmedByCleared() {
+		_spec.ClearField(postitem.FieldOutcomeConfirmedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ConfirmedXPostURL(); ok {
+		_spec.SetField(postitem.FieldConfirmedXPostURL, field.TypeString, value)
+	}
+	if _u.mutation.ConfirmedXPostURLCleared() {
+		_spec.ClearField(postitem.FieldConfirmedXPostURL, field.TypeString)
 	}
 	if value, ok := _u.mutation.PublishedAt(); ok {
 		_spec.SetField(postitem.FieldPublishedAt, field.TypeTime, value)
@@ -357,6 +488,100 @@ func (_u *PostItemUpdateOne) ClearXPostID() *PostItemUpdateOne {
 	return _u
 }
 
+// SetSubmissionState sets the "submission_state" field.
+func (_u *PostItemUpdateOne) SetSubmissionState(v postitem.SubmissionState) *PostItemUpdateOne {
+	_u.mutation.SetSubmissionState(v)
+	return _u
+}
+
+// SetNillableSubmissionState sets the "submission_state" field if the given value is not nil.
+func (_u *PostItemUpdateOne) SetNillableSubmissionState(v *postitem.SubmissionState) *PostItemUpdateOne {
+	if v != nil {
+		_u.SetSubmissionState(*v)
+	}
+	return _u
+}
+
+// SetSubmissionStartedAt sets the "submission_started_at" field.
+func (_u *PostItemUpdateOne) SetSubmissionStartedAt(v time.Time) *PostItemUpdateOne {
+	_u.mutation.SetSubmissionStartedAt(v)
+	return _u
+}
+
+// SetNillableSubmissionStartedAt sets the "submission_started_at" field if the given value is not nil.
+func (_u *PostItemUpdateOne) SetNillableSubmissionStartedAt(v *time.Time) *PostItemUpdateOne {
+	if v != nil {
+		_u.SetSubmissionStartedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubmissionStartedAt clears the value of the "submission_started_at" field.
+func (_u *PostItemUpdateOne) ClearSubmissionStartedAt() *PostItemUpdateOne {
+	_u.mutation.ClearSubmissionStartedAt()
+	return _u
+}
+
+// SetOutcomeConfirmedAt sets the "outcome_confirmed_at" field.
+func (_u *PostItemUpdateOne) SetOutcomeConfirmedAt(v time.Time) *PostItemUpdateOne {
+	_u.mutation.SetOutcomeConfirmedAt(v)
+	return _u
+}
+
+// SetNillableOutcomeConfirmedAt sets the "outcome_confirmed_at" field if the given value is not nil.
+func (_u *PostItemUpdateOne) SetNillableOutcomeConfirmedAt(v *time.Time) *PostItemUpdateOne {
+	if v != nil {
+		_u.SetOutcomeConfirmedAt(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeConfirmedAt clears the value of the "outcome_confirmed_at" field.
+func (_u *PostItemUpdateOne) ClearOutcomeConfirmedAt() *PostItemUpdateOne {
+	_u.mutation.ClearOutcomeConfirmedAt()
+	return _u
+}
+
+// SetOutcomeConfirmedBy sets the "outcome_confirmed_by" field.
+func (_u *PostItemUpdateOne) SetOutcomeConfirmedBy(v uuid.UUID) *PostItemUpdateOne {
+	_u.mutation.SetOutcomeConfirmedBy(v)
+	return _u
+}
+
+// SetNillableOutcomeConfirmedBy sets the "outcome_confirmed_by" field if the given value is not nil.
+func (_u *PostItemUpdateOne) SetNillableOutcomeConfirmedBy(v *uuid.UUID) *PostItemUpdateOne {
+	if v != nil {
+		_u.SetOutcomeConfirmedBy(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeConfirmedBy clears the value of the "outcome_confirmed_by" field.
+func (_u *PostItemUpdateOne) ClearOutcomeConfirmedBy() *PostItemUpdateOne {
+	_u.mutation.ClearOutcomeConfirmedBy()
+	return _u
+}
+
+// SetConfirmedXPostURL sets the "confirmed_x_post_url" field.
+func (_u *PostItemUpdateOne) SetConfirmedXPostURL(v string) *PostItemUpdateOne {
+	_u.mutation.SetConfirmedXPostURL(v)
+	return _u
+}
+
+// SetNillableConfirmedXPostURL sets the "confirmed_x_post_url" field if the given value is not nil.
+func (_u *PostItemUpdateOne) SetNillableConfirmedXPostURL(v *string) *PostItemUpdateOne {
+	if v != nil {
+		_u.SetConfirmedXPostURL(*v)
+	}
+	return _u
+}
+
+// ClearConfirmedXPostURL clears the value of the "confirmed_x_post_url" field.
+func (_u *PostItemUpdateOne) ClearConfirmedXPostURL() *PostItemUpdateOne {
+	_u.mutation.ClearConfirmedXPostURL()
+	return _u
+}
+
 // SetPublishedAt sets the "published_at" field.
 func (_u *PostItemUpdateOne) SetPublishedAt(v time.Time) *PostItemUpdateOne {
 	_u.mutation.SetPublishedAt(v)
@@ -480,6 +705,16 @@ func (_u *PostItemUpdateOne) check() error {
 			return &ValidationError{Name: "position", err: fmt.Errorf(`ent: validator failed for field "PostItem.position": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.SubmissionState(); ok {
+		if err := postitem.SubmissionStateValidator(v); err != nil {
+			return &ValidationError{Name: "submission_state", err: fmt.Errorf(`ent: validator failed for field "PostItem.submission_state": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ConfirmedXPostURL(); ok {
+		if err := postitem.ConfirmedXPostURLValidator(v); err != nil {
+			return &ValidationError{Name: "confirmed_x_post_url", err: fmt.Errorf(`ent: validator failed for field "PostItem.confirmed_x_post_url": %w`, err)}
+		}
+	}
 	if _u.mutation.PostCleared() && len(_u.mutation.PostIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PostItem.post"`)
 	}
@@ -529,6 +764,33 @@ func (_u *PostItemUpdateOne) sqlSave(ctx context.Context) (_node *PostItem, err 
 	}
 	if _u.mutation.XPostIDCleared() {
 		_spec.ClearField(postitem.FieldXPostID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SubmissionState(); ok {
+		_spec.SetField(postitem.FieldSubmissionState, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.SubmissionStartedAt(); ok {
+		_spec.SetField(postitem.FieldSubmissionStartedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubmissionStartedAtCleared() {
+		_spec.ClearField(postitem.FieldSubmissionStartedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.OutcomeConfirmedAt(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedAt, field.TypeTime, value)
+	}
+	if _u.mutation.OutcomeConfirmedAtCleared() {
+		_spec.ClearField(postitem.FieldOutcomeConfirmedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.OutcomeConfirmedBy(); ok {
+		_spec.SetField(postitem.FieldOutcomeConfirmedBy, field.TypeUUID, value)
+	}
+	if _u.mutation.OutcomeConfirmedByCleared() {
+		_spec.ClearField(postitem.FieldOutcomeConfirmedBy, field.TypeUUID)
+	}
+	if value, ok := _u.mutation.ConfirmedXPostURL(); ok {
+		_spec.SetField(postitem.FieldConfirmedXPostURL, field.TypeString, value)
+	}
+	if _u.mutation.ConfirmedXPostURLCleared() {
+		_spec.ClearField(postitem.FieldConfirmedXPostURL, field.TypeString)
 	}
 	if value, ok := _u.mutation.PublishedAt(); ok {
 		_spec.SetField(postitem.FieldPublishedAt, field.TypeTime, value)

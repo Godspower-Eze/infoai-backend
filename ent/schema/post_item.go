@@ -30,6 +30,22 @@ func (PostItem) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Unique(),
+		field.Enum("submission_state").
+			Values("not_started", "submitting", "published", "outcome_unknown").
+			Default("not_started"),
+		field.Time("submission_started_at").
+			Optional().
+			Nillable(),
+		field.Time("outcome_confirmed_at").
+			Optional().
+			Nillable(),
+		field.UUID("outcome_confirmed_by", uuid.UUID{}).
+			Optional().
+			Nillable(),
+		field.String("confirmed_x_post_url").
+			Optional().
+			Nillable().
+			MaxLen(2048),
 		field.Time("published_at").
 			Optional().
 			Nillable(),
