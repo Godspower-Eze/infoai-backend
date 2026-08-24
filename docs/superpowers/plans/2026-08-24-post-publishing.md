@@ -342,9 +342,9 @@ git commit -m "feat: add local media storage"
 - Create: `internal/posts/ent_repository_test.go`
 
 **Interfaces:**
-- Produces `posts.Service` methods `Create`, `Get`, `List`, `Update`, `Schedule`, and `CancelSchedule`.
+- Produces `posts.Service` methods `Create`, `Get`, `List`, and `Update`, plus reusable publish-readiness validation consumed by Task 6.
 - Produces owner-scoped `posts.Repository` methods used by HTTP and later workers.
-- Consumes `MediaPolicy`, `Clock`, and `PublicationQueue`; scheduling queue integration is completed in Task 6.
+- Consumes text-validation policy. Task 6 adds the clock and transaction-bound `PublicationQueue` when it implements scheduling, cancellation, and immediate publication.
 
 - [ ] **Step 1: Define domain commands and write failing service tests**
 
@@ -361,7 +361,7 @@ type ItemInput struct {
 }
 ```
 
-Tests cover one-to-25 ordered items, temporarily empty draft items, owner/account mismatch, cached subscription limits, immutable states, UTC scheduling, rescheduling, and cancellation returning `scheduled` to `draft`. Draft creation and draft updates permit incomplete items; schedule validation rejects every item containing neither text nor media with an item-specific field error. Scheduled updates must remain publishable.
+Tests cover one-to-25 ordered items, temporarily empty draft items, owner/account mismatch, cached subscription limits, immutable states, and publish-readiness validation. Draft creation and draft updates permit incomplete items; readiness validation rejects every item containing neither text nor media with an item-specific field error. Scheduled updates must remain publishable.
 
 - [ ] **Step 2: Run service tests and observe failure**
 
@@ -510,7 +510,7 @@ Use River's transaction-bound client/insert API with the `*sql.Tx` passed by `da
 
 - [ ] **Step 4: Add failing service tests for atomic publish/schedule/cancel**
 
-Assert state changes and job insertion occur in the same fake transaction contract, active job identity/version is stored, and stale cancellation invalidates the version. Both immediate publish and scheduling reject any item containing neither text nor media before changing state or inserting a job.
+Extend `posts.Service` with `Schedule`, `CancelSchedule`, and immediate `Publish`. Assert state changes and job insertion occur in the same fake transaction contract, active job identity/version is stored, and stale cancellation invalidates the version. Both immediate publish and scheduling invoke Task 4 publish-readiness validation and reject any item containing neither text nor media before changing state or inserting a job.
 
 - [ ] **Step 5: Implement publish/schedule queue orchestration**
 
