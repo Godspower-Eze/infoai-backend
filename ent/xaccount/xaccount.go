@@ -23,6 +23,10 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldProfileImageURL holds the string denoting the profile_image_url field in the database.
 	FieldProfileImageURL = "profile_image_url"
+	// FieldSubscriptionType holds the string denoting the subscription_type field in the database.
+	FieldSubscriptionType = "subscription_type"
+	// FieldSubscriptionCheckedAt holds the string denoting the subscription_checked_at field in the database.
+	FieldSubscriptionCheckedAt = "subscription_checked_at"
 	// FieldAccessToken holds the string denoting the access_token field in the database.
 	FieldAccessToken = "access_token"
 	// FieldRefreshToken holds the string denoting the refresh_token field in the database.
@@ -31,12 +35,18 @@ const (
 	FieldTokenExpiry = "token_expiry"
 	// FieldScopes holds the string denoting the scopes field in the database.
 	FieldScopes = "scopes"
+	// FieldRateLimitRemaining holds the string denoting the rate_limit_remaining field in the database.
+	FieldRateLimitRemaining = "rate_limit_remaining"
+	// FieldRateLimitResetAt holds the string denoting the rate_limit_reset_at field in the database.
+	FieldRateLimitResetAt = "rate_limit_reset_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgePosts holds the string denoting the posts edge name in mutations.
+	EdgePosts = "posts"
 	// Table holds the table name of the xaccount in the database.
 	Table = "x_accounts"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -46,6 +56,13 @@ const (
 	OwnerInverseTable = "users"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "user_x_accounts"
+	// PostsTable is the table that holds the posts relation/edge.
+	PostsTable = "posts"
+	// PostsInverseTable is the table name for the Post entity.
+	// It exists in this package in order to avoid circular dependency with the "post" package.
+	PostsInverseTable = "posts"
+	// PostsColumn is the table column denoting the posts relation/edge.
+	PostsColumn = "x_account_id"
 )
 
 // Columns holds all SQL columns for xaccount fields.
@@ -55,10 +72,14 @@ var Columns = []string{
 	FieldUsername,
 	FieldDisplayName,
 	FieldProfileImageURL,
+	FieldSubscriptionType,
+	FieldSubscriptionCheckedAt,
 	FieldAccessToken,
 	FieldRefreshToken,
 	FieldTokenExpiry,
 	FieldScopes,
+	FieldRateLimitRemaining,
+	FieldRateLimitResetAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -91,8 +112,12 @@ var (
 	UsernameValidator func(string) error
 	// DefaultDisplayName holds the default value on creation for the "display_name" field.
 	DefaultDisplayName string
+	// DefaultSubscriptionType holds the default value on creation for the "subscription_type" field.
+	DefaultSubscriptionType string
 	// DefaultScopes holds the default value on creation for the "scopes" field.
 	DefaultScopes []string
+	// RateLimitRemainingValidator is a validator for the "rate_limit_remaining" field. It is called by the builders before save.
+	RateLimitRemainingValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -131,9 +156,29 @@ func ByProfileImageURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProfileImageURL, opts...).ToFunc()
 }
 
+// BySubscriptionType orders the results by the subscription_type field.
+func BySubscriptionType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionType, opts...).ToFunc()
+}
+
+// BySubscriptionCheckedAt orders the results by the subscription_checked_at field.
+func BySubscriptionCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionCheckedAt, opts...).ToFunc()
+}
+
 // ByTokenExpiry orders the results by the token_expiry field.
 func ByTokenExpiry(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTokenExpiry, opts...).ToFunc()
+}
+
+// ByRateLimitRemaining orders the results by the rate_limit_remaining field.
+func ByRateLimitRemaining(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRateLimitRemaining, opts...).ToFunc()
+}
+
+// ByRateLimitResetAt orders the results by the rate_limit_reset_at field.
+func ByRateLimitResetAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRateLimitResetAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -152,10 +197,31 @@ func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByPostsCount orders the results by posts count.
+func ByPostsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPostsStep(), opts...)
+	}
+}
+
+// ByPosts orders the results by posts terms.
+func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newOwnerStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OwnerInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+	)
+}
+func newPostsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PostsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
 	)
 }

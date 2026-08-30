@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/godspowere/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/google/uuid"
 )
 
@@ -36,9 +36,13 @@ type User struct {
 type UserEdges struct {
 	// XAccounts holds the value of the x_accounts edge.
 	XAccounts []*XAccount `json:"x_accounts,omitempty"`
+	// Posts holds the value of the posts edge.
+	Posts []*Post `json:"posts,omitempty"`
+	// MediaAssets holds the value of the media_assets edge.
+	MediaAssets []*MediaAsset `json:"media_assets,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // XAccountsOrErr returns the XAccounts value or an error if the edge
@@ -48,6 +52,24 @@ func (e UserEdges) XAccountsOrErr() ([]*XAccount, error) {
 		return e.XAccounts, nil
 	}
 	return nil, &NotLoadedError{edge: "x_accounts"}
+}
+
+// PostsOrErr returns the Posts value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PostsOrErr() ([]*Post, error) {
+	if e.loadedTypes[1] {
+		return e.Posts, nil
+	}
+	return nil, &NotLoadedError{edge: "posts"}
+}
+
+// MediaAssetsOrErr returns the MediaAssets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MediaAssetsOrErr() ([]*MediaAsset, error) {
+	if e.loadedTypes[2] {
+		return e.MediaAssets, nil
+	}
+	return nil, &NotLoadedError{edge: "media_assets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -122,6 +144,16 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryXAccounts queries the "x_accounts" edge of the User entity.
 func (_m *User) QueryXAccounts() *XAccountQuery {
 	return NewUserClient(_m.config).QueryXAccounts(_m)
+}
+
+// QueryPosts queries the "posts" edge of the User entity.
+func (_m *User) QueryPosts() *PostQuery {
+	return NewUserClient(_m.config).QueryPosts(_m)
+}
+
+// QueryMediaAssets queries the "media_assets" edge of the User entity.
+func (_m *User) QueryMediaAssets() *MediaAssetQuery {
+	return NewUserClient(_m.config).QueryMediaAssets(_m)
 }
 
 // Update returns a builder for updating this User.

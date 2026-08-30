@@ -37,5 +37,7 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("x_accounts", XAccount.Type),
+		edge.To("posts", Post.Type),
+		edge.To("media_assets", MediaAsset.Type),
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/godspowere/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
 	"github.com/google/uuid"
 )
 
@@ -76,6 +76,16 @@ func ProfileImageURL(v string) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldProfileImageURL, v))
 }
 
+// SubscriptionType applies equality check predicate on the "subscription_type" field. It's identical to SubscriptionTypeEQ.
+func SubscriptionType(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionCheckedAt applies equality check predicate on the "subscription_checked_at" field. It's identical to SubscriptionCheckedAtEQ.
+func SubscriptionCheckedAt(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionCheckedAt, v))
+}
+
 // AccessToken applies equality check predicate on the "access_token" field. It's identical to AccessTokenEQ.
 func AccessToken(v []byte) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldAccessToken, v))
@@ -89,6 +99,16 @@ func RefreshToken(v []byte) predicate.XAccount {
 // TokenExpiry applies equality check predicate on the "token_expiry" field. It's identical to TokenExpiryEQ.
 func TokenExpiry(v time.Time) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldTokenExpiry, v))
+}
+
+// RateLimitRemaining applies equality check predicate on the "rate_limit_remaining" field. It's identical to RateLimitRemainingEQ.
+func RateLimitRemaining(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldRateLimitRemaining, v))
+}
+
+// RateLimitResetAt applies equality check predicate on the "rate_limit_reset_at" field. It's identical to RateLimitResetAtEQ.
+func RateLimitResetAt(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldRateLimitResetAt, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -371,6 +391,121 @@ func ProfileImageURLContainsFold(v string) predicate.XAccount {
 	return predicate.XAccount(sql.FieldContainsFold(FieldProfileImageURL, v))
 }
 
+// SubscriptionTypeEQ applies the EQ predicate on the "subscription_type" field.
+func SubscriptionTypeEQ(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeNEQ applies the NEQ predicate on the "subscription_type" field.
+func SubscriptionTypeNEQ(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeIn applies the In predicate on the "subscription_type" field.
+func SubscriptionTypeIn(vs ...string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldSubscriptionType, vs...))
+}
+
+// SubscriptionTypeNotIn applies the NotIn predicate on the "subscription_type" field.
+func SubscriptionTypeNotIn(vs ...string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldSubscriptionType, vs...))
+}
+
+// SubscriptionTypeGT applies the GT predicate on the "subscription_type" field.
+func SubscriptionTypeGT(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeGTE applies the GTE predicate on the "subscription_type" field.
+func SubscriptionTypeGTE(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeLT applies the LT predicate on the "subscription_type" field.
+func SubscriptionTypeLT(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeLTE applies the LTE predicate on the "subscription_type" field.
+func SubscriptionTypeLTE(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeContains applies the Contains predicate on the "subscription_type" field.
+func SubscriptionTypeContains(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldContains(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeHasPrefix applies the HasPrefix predicate on the "subscription_type" field.
+func SubscriptionTypeHasPrefix(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldHasPrefix(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeHasSuffix applies the HasSuffix predicate on the "subscription_type" field.
+func SubscriptionTypeHasSuffix(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldHasSuffix(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeEqualFold applies the EqualFold predicate on the "subscription_type" field.
+func SubscriptionTypeEqualFold(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEqualFold(FieldSubscriptionType, v))
+}
+
+// SubscriptionTypeContainsFold applies the ContainsFold predicate on the "subscription_type" field.
+func SubscriptionTypeContainsFold(v string) predicate.XAccount {
+	return predicate.XAccount(sql.FieldContainsFold(FieldSubscriptionType, v))
+}
+
+// SubscriptionCheckedAtEQ applies the EQ predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtNEQ applies the NEQ predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtIn applies the In predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldSubscriptionCheckedAt, vs...))
+}
+
+// SubscriptionCheckedAtNotIn applies the NotIn predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNotIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldSubscriptionCheckedAt, vs...))
+}
+
+// SubscriptionCheckedAtGT applies the GT predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtGT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtGTE applies the GTE predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtGTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtLT applies the LT predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtLT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtLTE applies the LTE predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtLTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldSubscriptionCheckedAt, v))
+}
+
+// SubscriptionCheckedAtIsNil applies the IsNil predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtIsNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldIsNull(FieldSubscriptionCheckedAt))
+}
+
+// SubscriptionCheckedAtNotNil applies the NotNil predicate on the "subscription_checked_at" field.
+func SubscriptionCheckedAtNotNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotNull(FieldSubscriptionCheckedAt))
+}
+
 // AccessTokenEQ applies the EQ predicate on the "access_token" field.
 func AccessTokenEQ(v []byte) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldAccessToken, v))
@@ -501,6 +636,106 @@ func TokenExpiryLTE(v time.Time) predicate.XAccount {
 	return predicate.XAccount(sql.FieldLTE(FieldTokenExpiry, v))
 }
 
+// RateLimitRemainingEQ applies the EQ predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingEQ(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingNEQ applies the NEQ predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingNEQ(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingIn applies the In predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingIn(vs ...int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldRateLimitRemaining, vs...))
+}
+
+// RateLimitRemainingNotIn applies the NotIn predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingNotIn(vs ...int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldRateLimitRemaining, vs...))
+}
+
+// RateLimitRemainingGT applies the GT predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingGT(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingGTE applies the GTE predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingGTE(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingLT applies the LT predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingLT(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingLTE applies the LTE predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingLTE(v int) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldRateLimitRemaining, v))
+}
+
+// RateLimitRemainingIsNil applies the IsNil predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingIsNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldIsNull(FieldRateLimitRemaining))
+}
+
+// RateLimitRemainingNotNil applies the NotNil predicate on the "rate_limit_remaining" field.
+func RateLimitRemainingNotNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotNull(FieldRateLimitRemaining))
+}
+
+// RateLimitResetAtEQ applies the EQ predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldEQ(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtNEQ applies the NEQ predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtNEQ(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNEQ(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtIn applies the In predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldIn(FieldRateLimitResetAt, vs...))
+}
+
+// RateLimitResetAtNotIn applies the NotIn predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtNotIn(vs ...time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotIn(FieldRateLimitResetAt, vs...))
+}
+
+// RateLimitResetAtGT applies the GT predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtGT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGT(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtGTE applies the GTE predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtGTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldGTE(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtLT applies the LT predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtLT(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLT(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtLTE applies the LTE predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtLTE(v time.Time) predicate.XAccount {
+	return predicate.XAccount(sql.FieldLTE(FieldRateLimitResetAt, v))
+}
+
+// RateLimitResetAtIsNil applies the IsNil predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtIsNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldIsNull(FieldRateLimitResetAt))
+}
+
+// RateLimitResetAtNotNil applies the NotNil predicate on the "rate_limit_reset_at" field.
+func RateLimitResetAtNotNil() predicate.XAccount {
+	return predicate.XAccount(sql.FieldNotNull(FieldRateLimitResetAt))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.XAccount {
 	return predicate.XAccount(sql.FieldEQ(FieldCreatedAt, v))
@@ -596,6 +831,29 @@ func HasOwner() predicate.XAccount {
 func HasOwnerWith(preds ...predicate.User) predicate.XAccount {
 	return predicate.XAccount(func(s *sql.Selector) {
 		step := newOwnerStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPosts applies the HasEdge predicate on the "posts" edge.
+func HasPosts() predicate.XAccount {
+	return predicate.XAccount(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PostsTable, PostsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPostsWith applies the HasEdge predicate on the "posts" edge with a given conditions (other predicates).
+func HasPostsWith(preds ...predicate.Post) predicate.XAccount {
+	return predicate.XAccount(func(s *sql.Selector) {
+		step := newPostsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

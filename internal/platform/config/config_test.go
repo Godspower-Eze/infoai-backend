@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/godspowere/infoai-backend/internal/platform/config"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
 )
 
 func validEnvironment() map[string]string {
@@ -49,6 +49,45 @@ func TestLoadAcceptsValidEnvironment(t *testing.T) {
 	}
 	if cfg.HTTPAddress != ":8080" {
 		t.Fatalf("HTTPAddress = %q, want :8080", cfg.HTTPAddress)
+	}
+	if cfg.ErrorLogPath != "var/log/infoai/errors.jsonl" || cfg.ErrorLogMaxBytes != 10<<20 || cfg.ErrorLogRetainedFiles != 5 {
+		t.Fatalf("error log defaults = %q/%d/%d", cfg.ErrorLogPath, cfg.ErrorLogMaxBytes, cfg.ErrorLogRetainedFiles)
+	}
+	if cfg.MediaStorageRoot != "var/media" {
+		t.Fatalf("MediaStorageRoot = %q, want var/media", cfg.MediaStorageRoot)
+	}
+}
+
+func TestLoadAcceptsCustomMediaStorageRoot(t *testing.T) {
+	environment := validEnvironment()
+	environment["MEDIA_STORAGE_ROOT"] = " /srv/infoai/media "
+
+	cfg, err := config.Load(lookup(environment))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.MediaStorageRoot != "/srv/infoai/media" {
+		t.Fatalf("MediaStorageRoot = %q, want /srv/infoai/media", cfg.MediaStorageRoot)
+	}
+}
+
+func TestLoadRejectsEmptyConfiguredMediaStorageRoot(t *testing.T) {
+	environment := validEnvironment()
+	environment["MEDIA_STORAGE_ROOT"] = "  "
+
+	_, err := config.Load(lookup(environment))
+	if err == nil || !strings.Contains(err.Error(), "MEDIA_STORAGE_ROOT must not be empty") {
+		t.Fatalf("Load() error = %v, want MEDIA_STORAGE_ROOT validation error", err)
+	}
+}
+
+func TestLoadRejectsInvalidErrorLogConfiguration(t *testing.T) {
+	environment := validEnvironment()
+	environment["ERROR_LOG_MAX_BYTES"] = "0"
+	environment["ERROR_LOG_RETAINED_FILES"] = "many"
+	_, err := config.Load(lookup(environment))
+	if err == nil || !strings.Contains(err.Error(), "ERROR_LOG_MAX_BYTES") || !strings.Contains(err.Error(), "ERROR_LOG_RETAINED_FILES") {
+		t.Fatalf("Load() error = %v", err)
 	}
 }
 

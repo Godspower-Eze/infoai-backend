@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/godspowere/infoai-backend/internal/auth"
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
 )
 
 type credentialsRequest struct {

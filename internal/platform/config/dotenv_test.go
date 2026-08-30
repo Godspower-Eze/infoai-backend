@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/godspowere/infoai-backend/internal/platform/config"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
 )
 
 func TestLoadDotEnvAllowsMissingFile(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/godspowere/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

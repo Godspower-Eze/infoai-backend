@@ -9,6 +9,182 @@ import (
 )
 
 var (
+	// MediaAssetsColumns holds the columns for the "media_assets" table.
+	MediaAssetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "position", Type: field.TypeInt},
+		{Name: "storage_key", Type: field.TypeString, Unique: true},
+		{Name: "original_filename", Type: field.TypeString},
+		{Name: "mime_type", Type: field.TypeString},
+		{Name: "size_bytes", Type: field.TypeInt64},
+		{Name: "sha256_checksum", Type: field.TypeBytes, Size: 32},
+		{Name: "alt_text", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "post_item_id", Type: field.TypeUUID},
+		{Name: "owner_id", Type: field.TypeUUID},
+	}
+	// MediaAssetsTable holds the schema information for the "media_assets" table.
+	MediaAssetsTable = &schema.Table{
+		Name:       "media_assets",
+		Columns:    MediaAssetsColumns,
+		PrimaryKey: []*schema.Column{MediaAssetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "media_assets_post_items_media_assets",
+				Columns:    []*schema.Column{MediaAssetsColumns[9]},
+				RefColumns: []*schema.Column{PostItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "media_assets_users_media_assets",
+				Columns:    []*schema.Column{MediaAssetsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "mediaasset_post_item_id_position",
+				Unique:  true,
+				Columns: []*schema.Column{MediaAssetsColumns[9], MediaAssetsColumns[1]},
+			},
+		},
+	}
+	// PostsColumns holds the columns for the "posts" table.
+	PostsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "creation_mode", Type: field.TypeEnum, Enums: []string{"user", "agent"}},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "scheduled", "publishing", "retry_wait", "partially_published", "published", "failed", "cancelled", "deleting", "deletion_failed"}, Default: "draft"},
+		{Name: "scheduled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "publish_requested_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "next_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "active_river_job_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "attempt_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_error_code", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "last_error_message", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "lease_token", Type: field.TypeUUID, Nullable: true},
+		{Name: "lease_owner", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "lease_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "lease_version", Type: field.TypeInt64, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "owner_id", Type: field.TypeUUID},
+		{Name: "x_account_id", Type: field.TypeUUID},
+	}
+	// PostsTable holds the schema information for the "posts" table.
+	PostsTable = &schema.Table{
+		Name:       "posts",
+		Columns:    PostsColumns,
+		PrimaryKey: []*schema.Column{PostsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "posts_users_posts",
+				Columns:    []*schema.Column{PostsColumns[17]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "posts_x_accounts_posts",
+				Columns:    []*schema.Column{PostsColumns[18]},
+				RefColumns: []*schema.Column{XAccountsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "post_owner_id_created_at_id",
+				Unique:  false,
+				Columns: []*schema.Column{PostsColumns[17], PostsColumns[15], PostsColumns[0]},
+			},
+			{
+				Name:    "post_status_scheduled_at",
+				Unique:  false,
+				Columns: []*schema.Column{PostsColumns[2], PostsColumns[3]},
+			},
+			{
+				Name:    "post_status_next_attempt_at",
+				Unique:  false,
+				Columns: []*schema.Column{PostsColumns[2], PostsColumns[6]},
+			},
+			{
+				Name:    "post_status_lease_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{PostsColumns[2], PostsColumns[13]},
+			},
+		},
+	}
+	// PostItemsColumns holds the columns for the "post_items" table.
+	PostItemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "position", Type: field.TypeInt},
+		{Name: "text", Type: field.TypeString, Default: ""},
+		{Name: "x_post_id", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "submission_state", Type: field.TypeEnum, Enums: []string{"not_started", "submitting", "published", "outcome_unknown"}, Default: "not_started"},
+		{Name: "submission_started_at", Type: field.TypeTime, Nullable: true},
+		{Name: "outcome_confirmed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "outcome_confirmed_by", Type: field.TypeUUID, Nullable: true},
+		{Name: "confirmed_x_post_url", Type: field.TypeString, Nullable: true, Size: 2048},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "post_id", Type: field.TypeUUID},
+	}
+	// PostItemsTable holds the schema information for the "post_items" table.
+	PostItemsTable = &schema.Table{
+		Name:       "post_items",
+		Columns:    PostItemsColumns,
+		PrimaryKey: []*schema.Column{PostItemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "post_items_posts_items",
+				Columns:    []*schema.Column{PostItemsColumns[12]},
+				RefColumns: []*schema.Column{PostsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "postitem_post_id_position",
+				Unique:  true,
+				Columns: []*schema.Column{PostItemsColumns[12], PostItemsColumns[1]},
+			},
+		},
+	}
+	// PublicationAttemptsColumns holds the columns for the "publication_attempts" table.
+	PublicationAttemptsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "attempt_number", Type: field.TypeInt},
+		{Name: "trigger", Type: field.TypeEnum, Enums: []string{"immediate", "scheduled", "retry", "recovery"}},
+		{Name: "outcome", Type: field.TypeEnum, Enums: []string{"pending", "succeeded", "retryable_failure", "permanent_failure"}, Default: "pending"},
+		{Name: "retryable", Type: field.TypeBool, Default: false},
+		{Name: "error_code", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "started_at", Type: field.TypeTime},
+		{Name: "finished_at", Type: field.TypeTime, Nullable: true},
+		{Name: "post_id", Type: field.TypeUUID},
+	}
+	// PublicationAttemptsTable holds the schema information for the "publication_attempts" table.
+	PublicationAttemptsTable = &schema.Table{
+		Name:       "publication_attempts",
+		Columns:    PublicationAttemptsColumns,
+		PrimaryKey: []*schema.Column{PublicationAttemptsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "publication_attempts_posts_attempts",
+				Columns:    []*schema.Column{PublicationAttemptsColumns[9]},
+				RefColumns: []*schema.Column{PostsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "publicationattempt_post_id_attempt_number",
+				Unique:  true,
+				Columns: []*schema.Column{PublicationAttemptsColumns[9], PublicationAttemptsColumns[1]},
+			},
+		},
+	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
 		{Name: "token", Type: field.TypeString},
@@ -27,6 +203,23 @@ var (
 				Columns: []*schema.Column{SessionsColumns[2]},
 			},
 		},
+	}
+	// StorageDeletionsColumns holds the columns for the "storage_deletions" table.
+	StorageDeletionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "storage_key", Type: field.TypeString, Unique: true},
+		{Name: "attempt_count", Type: field.TypeInt, Default: 0},
+		{Name: "next_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_error_code", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "last_error_message", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// StorageDeletionsTable holds the schema information for the "storage_deletions" table.
+	StorageDeletionsTable = &schema.Table{
+		Name:       "storage_deletions",
+		Columns:    StorageDeletionsColumns,
+		PrimaryKey: []*schema.Column{StorageDeletionsColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -49,10 +242,14 @@ var (
 		{Name: "username", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString, Default: ""},
 		{Name: "profile_image_url", Type: field.TypeString, Nullable: true},
+		{Name: "subscription_type", Type: field.TypeString, Default: ""},
+		{Name: "subscription_checked_at", Type: field.TypeTime, Nullable: true},
 		{Name: "access_token", Type: field.TypeBytes},
 		{Name: "refresh_token", Type: field.TypeBytes, Nullable: true},
 		{Name: "token_expiry", Type: field.TypeTime},
 		{Name: "scopes", Type: field.TypeJSON},
+		{Name: "rate_limit_remaining", Type: field.TypeInt, Nullable: true},
+		{Name: "rate_limit_reset_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "user_x_accounts", Type: field.TypeUUID},
@@ -65,7 +262,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "x_accounts_users_x_accounts",
-				Columns:    []*schema.Column{XAccountsColumns[11]},
+				Columns:    []*schema.Column{XAccountsColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -73,13 +270,24 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		MediaAssetsTable,
+		PostsTable,
+		PostItemsTable,
+		PublicationAttemptsTable,
 		SessionsTable,
+		StorageDeletionsTable,
 		UsersTable,
 		XAccountsTable,
 	}
 )
 
 func init() {
+	MediaAssetsTable.ForeignKeys[0].RefTable = PostItemsTable
+	MediaAssetsTable.ForeignKeys[1].RefTable = UsersTable
+	PostsTable.ForeignKeys[0].RefTable = UsersTable
+	PostsTable.ForeignKeys[1].RefTable = XAccountsTable
+	PostItemsTable.ForeignKeys[0].RefTable = PostsTable
+	PublicationAttemptsTable.ForeignKeys[0].RefTable = PostsTable
 	SessionsTable.Annotation = &entsql.Annotation{
 		Table: "sessions",
 	}

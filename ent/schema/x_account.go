@@ -37,6 +37,11 @@ func (XAccount) Fields() []ent.Field {
 		field.String("profile_image_url").
 			Optional().
 			Nillable(),
+		field.String("subscription_type").
+			Default(""),
+		field.Time("subscription_checked_at").
+			Optional().
+			Nillable(),
 		field.Bytes("access_token").
 			Sensitive(),
 		field.Bytes("refresh_token").
@@ -46,6 +51,13 @@ func (XAccount) Fields() []ent.Field {
 		field.Time("token_expiry"),
 		field.JSON("scopes", []string{}).
 			Default([]string{}),
+		field.Int("rate_limit_remaining").
+			Optional().
+			Nillable().
+			NonNegative(),
+		field.Time("rate_limit_reset_at").
+			Optional().
+			Nillable(),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),
@@ -62,5 +74,6 @@ func (XAccount) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Immutable(),
+		edge.To("posts", Post.Type),
 	}
 }

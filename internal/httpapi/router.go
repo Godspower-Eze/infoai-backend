@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
+	"github.com/Godspower-Eze/infoai-backend/internal/posts"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
-	"github.com/godspowere/infoai-backend/internal/auth"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
 	"github.com/google/uuid"
 )
 
@@ -33,9 +34,26 @@ type Readiness interface {
 	Ping(ctx context.Context) error
 }
 
+type PostService interface {
+	Create(context.Context, posts.CreateCommand) (posts.Post, error)
+	Get(context.Context, uuid.UUID, uuid.UUID) (posts.Post, error)
+	List(context.Context, uuid.UUID) ([]posts.Post, error)
+	Update(context.Context, posts.UpdateCommand) (posts.Post, error)
+	Delete(context.Context, uuid.UUID, uuid.UUID) error
+	RequestDeletion(context.Context, posts.DeleteCommand) (bool, error)
+	UploadMedia(context.Context, posts.UploadMediaCommand) (posts.Post, error)
+	RemoveMedia(context.Context, posts.RemoveMediaCommand) error
+	Publish(context.Context, uuid.UUID, uuid.UUID) (posts.Post, error)
+	Schedule(context.Context, uuid.UUID, uuid.UUID, time.Time) (posts.Post, error)
+	CancelSchedule(context.Context, uuid.UUID, uuid.UUID) (posts.Post, error)
+	ResolveOutcome(context.Context, posts.ResolveOutcomeCommand) (posts.Post, error)
+	Retry(context.Context, posts.RetryCommand) (posts.Post, error)
+}
+
 type Dependencies struct {
 	Auth                 AuthService
 	X                    XService
+	Posts                PostService
 	Sessions             *scs.SessionManager
 	Readiness            Readiness
 	FrontendOrigin       string
@@ -46,6 +64,7 @@ type Dependencies struct {
 type API struct {
 	auth                 AuthService
 	x                    XService
+	posts                PostService
 	sessions             *scs.SessionManager
 	readiness            Readiness
 	frontendXRedirectURL string
@@ -53,7 +72,7 @@ type API struct {
 }
 
 func NewRouter(dependencies Dependencies) (http.Handler, error) {
-	if dependencies.Auth == nil || dependencies.X == nil || dependencies.Sessions == nil || dependencies.Readiness == nil {
+	if dependencies.Auth == nil || dependencies.X == nil || dependencies.Posts == nil || dependencies.Sessions == nil || dependencies.Readiness == nil {
 		return nil, errors.New("HTTP API dependencies must not be nil")
 	}
 	protection := http.NewCrossOriginProtection()
@@ -63,6 +82,7 @@ func NewRouter(dependencies Dependencies) (http.Handler, error) {
 	api := &API{
 		auth:                 dependencies.Auth,
 		x:                    dependencies.X,
+		posts:                dependencies.Posts,
 		sessions:             dependencies.Sessions,
 		readiness:            dependencies.Readiness,
 		frontendXRedirectURL: dependencies.FrontendXRedirectURL,
@@ -80,7 +100,7 @@ func NewRouter(dependencies Dependencies) (http.Handler, error) {
 	}
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{dependencies.FrontendOrigin},
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodOptions},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodDelete, http.MethodOptions},
 		AllowedHeaders:   []string{"Accept", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -103,6 +123,21 @@ func NewRouter(dependencies Dependencies) (http.Handler, error) {
 			router.Get("/callback", api.xCallback)
 			router.Get("/accounts", api.xAccounts)
 			router.Delete("/accounts/{accountID}", api.disconnectX)
+		})
+		router.Route("/posts", func(router chi.Router) {
+			router.Use(api.requireUser)
+			router.Post("/", api.createPost)
+			router.Get("/", api.listPosts)
+			router.Get("/{postID}", api.getPost)
+			router.Patch("/{postID}", api.updatePost)
+			router.Delete("/{postID}", api.deletePost)
+			router.Post("/{postID}/publish", api.publishPost)
+			router.Post("/{postID}/retry", api.retryPost)
+			router.Post("/{postID}/schedule", api.schedulePost)
+			router.Post("/{postID}/schedule/cancel", api.cancelPostSchedule)
+			router.Post("/{postID}/items/{itemID}/media", api.uploadPostMedia)
+			router.Delete("/{postID}/items/{itemID}/media/{mediaID}", api.removePostMedia)
+			router.Post("/{postID}/items/{itemID}/resolve-outcome", api.resolvePostOutcome)
 		})
 	})
 	return router, nil

@@ -15,18 +15,22 @@ const defaultSessionLifetime = 30 * 24 * time.Hour
 type LookupFunc func(string) (string, bool)
 
 type Config struct {
-	HTTPAddress          string
-	DatabaseURL          string
-	APIOrigin            string
-	FrontendOrigin       string
-	FrontendXRedirectURL string
-	CookieSecure         bool
-	SessionLifetime      time.Duration
-	TokenEncryptionKey   []byte
-	XClientID            string
-	XClientSecret        string
-	XCallbackURL         string
-	TrustedProxyCIDRs    []string
+	HTTPAddress           string
+	DatabaseURL           string
+	APIOrigin             string
+	FrontendOrigin        string
+	FrontendXRedirectURL  string
+	CookieSecure          bool
+	SessionLifetime       time.Duration
+	TokenEncryptionKey    []byte
+	XClientID             string
+	XClientSecret         string
+	XCallbackURL          string
+	TrustedProxyCIDRs     []string
+	ErrorLogPath          string
+	ErrorLogMaxBytes      int64
+	ErrorLogRetainedFiles int
+	MediaStorageRoot      string
 }
 
 type ValidationError struct {
@@ -41,6 +45,10 @@ func Load(lookup LookupFunc) (Config, error) {
 	var cfg Config
 	var problems []string
 	cfg.HTTPAddress = ":8080"
+	cfg.ErrorLogPath = "var/log/infoai/errors.jsonl"
+	cfg.ErrorLogMaxBytes = 10 << 20
+	cfg.ErrorLogRetainedFiles = 5
+	cfg.MediaStorageRoot = "var/media"
 	if raw, ok := lookup("HTTP_ADDRESS"); ok && strings.TrimSpace(raw) != "" {
 		cfg.HTTPAddress = strings.TrimSpace(raw)
 	}
@@ -61,6 +69,36 @@ func Load(lookup LookupFunc) (Config, error) {
 				break
 			}
 			cfg.TrustedProxyCIDRs = append(cfg.TrustedProxyCIDRs, prefix)
+		}
+	}
+	if raw, ok := lookup("ERROR_LOG_PATH"); ok {
+		if strings.TrimSpace(raw) == "" {
+			problems = append(problems, "ERROR_LOG_PATH must not be empty")
+		} else {
+			cfg.ErrorLogPath = strings.TrimSpace(raw)
+		}
+	}
+	if raw, ok := lookup("ERROR_LOG_MAX_BYTES"); ok {
+		value, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+		if err != nil || value <= 0 {
+			problems = append(problems, "ERROR_LOG_MAX_BYTES must be a positive integer")
+		} else {
+			cfg.ErrorLogMaxBytes = value
+		}
+	}
+	if raw, ok := lookup("ERROR_LOG_RETAINED_FILES"); ok {
+		value, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err != nil || value <= 0 {
+			problems = append(problems, "ERROR_LOG_RETAINED_FILES must be a positive integer")
+		} else {
+			cfg.ErrorLogRetainedFiles = value
+		}
+	}
+	if raw, ok := lookup("MEDIA_STORAGE_ROOT"); ok {
+		if strings.TrimSpace(raw) == "" {
+			problems = append(problems, "MEDIA_STORAGE_ROOT must not be empty")
+		} else {
+			cfg.MediaStorageRoot = strings.TrimSpace(raw)
 		}
 	}
 

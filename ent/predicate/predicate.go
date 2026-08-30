@@ -6,8 +6,23 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// MediaAsset is the predicate function for mediaasset builders.
+type MediaAsset func(*sql.Selector)
+
+// Post is the predicate function for post builders.
+type Post func(*sql.Selector)
+
+// PostItem is the predicate function for postitem builders.
+type PostItem func(*sql.Selector)
+
+// PublicationAttempt is the predicate function for publicationattempt builders.
+type PublicationAttempt func(*sql.Selector)
+
 // SCSSession is the predicate function for scssession builders.
 type SCSSession func(*sql.Selector)
+
+// StorageDeletion is the predicate function for storagedeletion builders.
+type StorageDeletion func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

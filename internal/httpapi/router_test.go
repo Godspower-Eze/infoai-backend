@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Godspower-Eze/infoai-backend/internal/auth"
+	xintegration "github.com/Godspower-Eze/infoai-backend/internal/integrations/x"
 	"github.com/alexedwards/scs/v2/memstore"
-	"github.com/godspowere/infoai-backend/internal/auth"
-	xintegration "github.com/godspowere/infoai-backend/internal/integrations/x"
 	"github.com/google/uuid"
 )
 
@@ -74,6 +74,7 @@ type testAPI struct {
 	handler http.Handler
 	auth    *stubAuth
 	x       *stubX
+	posts   *stubPosts
 }
 
 func newTestAPI(t *testing.T) testAPI {
@@ -85,10 +86,12 @@ func newTestAPIWithProxies(t *testing.T, trustedProxyCIDRs []string) testAPI {
 	user := auth.User{ID: uuid.New(), Email: "person@example.com", CreatedAt: time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)}
 	authService := &stubAuth{user: user}
 	xService := &stubX{beginURL: "https://x.example/authorize"}
+	postService := &stubPosts{}
 	sessions := auth.NewSessionManager(memstore.New(), time.Hour, false)
 	handler, err := NewRouter(Dependencies{
 		Auth:                 authService,
 		X:                    xService,
+		Posts:                postService,
 		Sessions:             sessions,
 		Readiness:            stubReadiness{},
 		FrontendOrigin:       testFrontendOrigin,
@@ -98,7 +101,7 @@ func newTestAPIWithProxies(t *testing.T, trustedProxyCIDRs []string) testAPI {
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}
-	return testAPI{handler: handler, auth: authService, x: xService}
+	return testAPI{handler: handler, auth: authService, x: xService, posts: postService}
 }
 
 func TestSignupRateLimitUsesClientIPResolvedThroughTrustedProxy(t *testing.T) {
@@ -238,7 +241,8 @@ func TestXRoutesRequireAuthenticationAndExposeOnlyMetadata(t *testing.T) {
 	}
 	cookie := signup(t, api)
 	accountID := uuid.New()
-	api.x.accounts = []xintegration.Account{{ID: accountID, XUserID: "x-123", Username: "person", DisplayName: "A Person"}}
+	checkedAt := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
+	api.x.accounts = []xintegration.Account{{ID: accountID, XUserID: "x-123", Username: "person", DisplayName: "A Person", SubscriptionType: "PremiumPlus", SubscriptionCheckedAt: &checkedAt}}
 
 	authorize := request(t, api.handler, http.MethodPost, "/api/v1/integrations/x/authorize", nil, cookie)
 	if authorize.Code != http.StatusOK || !bytes.Contains(authorize.Body.Bytes(), []byte("https://x.example/authorize")) {
@@ -247,6 +251,9 @@ func TestXRoutesRequireAuthenticationAndExposeOnlyMetadata(t *testing.T) {
 	accounts := request(t, api.handler, http.MethodGet, "/api/v1/integrations/x/accounts", nil, cookie)
 	if accounts.Code != http.StatusOK || bytes.Contains(accounts.Body.Bytes(), []byte("token")) {
 		t.Fatalf("accounts status = %d, body = %s", accounts.Code, accounts.Body.String())
+	}
+	if !bytes.Contains(accounts.Body.Bytes(), []byte(`"subscription_type":"PremiumPlus"`)) || !bytes.Contains(accounts.Body.Bytes(), []byte(`"subscription_checked_at":"2026-08-18T12:00:00Z"`)) {
+		t.Fatalf("accounts response omits subscription metadata: %s", accounts.Body.String())
 	}
 	disconnect := request(t, api.handler, http.MethodDelete, "/api/v1/integrations/x/accounts/"+accountID.String(), nil, cookie)
 	if disconnect.Code != http.StatusNoContent || api.x.disconnectedID != accountID {
@@ -286,7 +293,7 @@ func TestHealthRoutesDistinguishLivenessAndReadiness(t *testing.T) {
 	}
 
 	sessions := auth.NewSessionManager(memstore.New(), time.Hour, false)
-	handler, err := NewRouter(Dependencies{Auth: api.auth, X: api.x, Sessions: sessions, Readiness: stubReadiness{err: errors.New("database unavailable")}, FrontendOrigin: testFrontendOrigin, FrontendXRedirectURL: testFrontendOrigin + "/settings/integrations"})
+	handler, err := NewRouter(Dependencies{Auth: api.auth, X: api.x, Posts: api.posts, Sessions: sessions, Readiness: stubReadiness{err: errors.New("database unavailable")}, FrontendOrigin: testFrontendOrigin, FrontendXRedirectURL: testFrontendOrigin + "/settings/integrations"})
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}

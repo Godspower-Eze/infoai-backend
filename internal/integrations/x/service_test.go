@@ -76,11 +76,13 @@ func (m *memoryAccounts) Upsert(_ context.Context, ownerID uuid.UUID, profile Pr
 		existing.Username = profile.Username
 		existing.DisplayName = profile.DisplayName
 		existing.ProfileImageURL = profile.ProfileImageURL
+		existing.SubscriptionType = profile.SubscriptionType
+		existing.SubscriptionCheckedAt = profile.SubscriptionCheckedAt
 		existing.EncryptedGrant = grant
 		m.accounts[id] = existing
 		return existing.Account, nil
 	}
-	account := Account{ID: uuid.New(), OwnerID: ownerID, XUserID: profile.ID, Username: profile.Username, DisplayName: profile.DisplayName, ProfileImageURL: profile.ProfileImageURL}
+	account := Account{ID: uuid.New(), OwnerID: ownerID, XUserID: profile.ID, Username: profile.Username, DisplayName: profile.DisplayName, ProfileImageURL: profile.ProfileImageURL, SubscriptionType: profile.SubscriptionType, SubscriptionCheckedAt: profile.SubscriptionCheckedAt}
 	m.accounts[account.ID] = StoredGrant{Account: account, EncryptedGrant: grant}
 	return account, nil
 }
@@ -138,7 +140,7 @@ func TestCompleteAuthorizationStoresEncryptedExclusiveGrant(t *testing.T) {
 	now := time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)
 	provider := &fakeProvider{
 		exchangedToken: OAuthToken{AccessToken: "access-secret", RefreshToken: "refresh-secret", Expiry: now.Add(2 * time.Hour), Scopes: []string{"tweet.read", "tweet.write"}},
-		profile:        Profile{ID: "x-123", Username: "person", DisplayName: "A Person"},
+		profile:        Profile{ID: "x-123", Username: "person", DisplayName: "A Person", SubscriptionType: "Premium"},
 	}
 	repository := newMemoryAccounts()
 	service, sessions := testService(t, now, provider, repository)
@@ -168,6 +170,9 @@ func TestCompleteAuthorizationStoresEncryptedExclusiveGrant(t *testing.T) {
 			t.Fatalf("CompleteAuthorization() error = %v", err)
 		}
 		stored := repository.accounts[account.ID]
+		if stored.SubscriptionType != "Premium" || stored.SubscriptionCheckedAt == nil || !stored.SubscriptionCheckedAt.Equal(now) {
+			t.Fatalf("stored subscription metadata = %q/%v, want Premium/%v", stored.SubscriptionType, stored.SubscriptionCheckedAt, now)
+		}
 		if bytes.Contains(stored.AccessToken, []byte("access-secret")) || bytes.Contains(stored.RefreshToken, []byte("refresh-secret")) {
 			t.Fatal("stored grant contains plaintext OAuth token")
 		}

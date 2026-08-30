@@ -10,8 +10,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/user"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
 )
 
@@ -62,6 +63,34 @@ func (_c *XAccountCreate) SetNillableProfileImageURL(v *string) *XAccountCreate 
 	return _c
 }
 
+// SetSubscriptionType sets the "subscription_type" field.
+func (_c *XAccountCreate) SetSubscriptionType(v string) *XAccountCreate {
+	_c.mutation.SetSubscriptionType(v)
+	return _c
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableSubscriptionType(v *string) *XAccountCreate {
+	if v != nil {
+		_c.SetSubscriptionType(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_c *XAccountCreate) SetSubscriptionCheckedAt(v time.Time) *XAccountCreate {
+	_c.mutation.SetSubscriptionCheckedAt(v)
+	return _c
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountCreate {
+	if v != nil {
+		_c.SetSubscriptionCheckedAt(*v)
+	}
+	return _c
+}
+
 // SetAccessToken sets the "access_token" field.
 func (_c *XAccountCreate) SetAccessToken(v []byte) *XAccountCreate {
 	_c.mutation.SetAccessToken(v)
@@ -83,6 +112,34 @@ func (_c *XAccountCreate) SetTokenExpiry(v time.Time) *XAccountCreate {
 // SetScopes sets the "scopes" field.
 func (_c *XAccountCreate) SetScopes(v []string) *XAccountCreate {
 	_c.mutation.SetScopes(v)
+	return _c
+}
+
+// SetRateLimitRemaining sets the "rate_limit_remaining" field.
+func (_c *XAccountCreate) SetRateLimitRemaining(v int) *XAccountCreate {
+	_c.mutation.SetRateLimitRemaining(v)
+	return _c
+}
+
+// SetNillableRateLimitRemaining sets the "rate_limit_remaining" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableRateLimitRemaining(v *int) *XAccountCreate {
+	if v != nil {
+		_c.SetRateLimitRemaining(*v)
+	}
+	return _c
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (_c *XAccountCreate) SetRateLimitResetAt(v time.Time) *XAccountCreate {
+	_c.mutation.SetRateLimitResetAt(v)
+	return _c
+}
+
+// SetNillableRateLimitResetAt sets the "rate_limit_reset_at" field if the given value is not nil.
+func (_c *XAccountCreate) SetNillableRateLimitResetAt(v *time.Time) *XAccountCreate {
+	if v != nil {
+		_c.SetRateLimitResetAt(*v)
+	}
 	return _c
 }
 
@@ -139,6 +196,21 @@ func (_c *XAccountCreate) SetOwner(v *User) *XAccountCreate {
 	return _c.SetOwnerID(v.ID)
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_c *XAccountCreate) AddPostIDs(ids ...uuid.UUID) *XAccountCreate {
+	_c.mutation.AddPostIDs(ids...)
+	return _c
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_c *XAccountCreate) AddPosts(v ...*Post) *XAccountCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPostIDs(ids...)
+}
+
 // Mutation returns the XAccountMutation object of the builder.
 func (_c *XAccountCreate) Mutation() *XAccountMutation {
 	return _c.mutation
@@ -177,6 +249,10 @@ func (_c *XAccountCreate) defaults() {
 	if _, ok := _c.mutation.DisplayName(); !ok {
 		v := xaccount.DefaultDisplayName
 		_c.mutation.SetDisplayName(v)
+	}
+	if _, ok := _c.mutation.SubscriptionType(); !ok {
+		v := xaccount.DefaultSubscriptionType
+		_c.mutation.SetSubscriptionType(v)
 	}
 	if _, ok := _c.mutation.Scopes(); !ok {
 		v := xaccount.DefaultScopes
@@ -217,6 +293,9 @@ func (_c *XAccountCreate) check() error {
 	if _, ok := _c.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "XAccount.display_name"`)}
 	}
+	if _, ok := _c.mutation.SubscriptionType(); !ok {
+		return &ValidationError{Name: "subscription_type", err: errors.New(`ent: missing required field "XAccount.subscription_type"`)}
+	}
 	if _, ok := _c.mutation.AccessToken(); !ok {
 		return &ValidationError{Name: "access_token", err: errors.New(`ent: missing required field "XAccount.access_token"`)}
 	}
@@ -225,6 +304,11 @@ func (_c *XAccountCreate) check() error {
 	}
 	if _, ok := _c.mutation.Scopes(); !ok {
 		return &ValidationError{Name: "scopes", err: errors.New(`ent: missing required field "XAccount.scopes"`)}
+	}
+	if v, ok := _c.mutation.RateLimitRemaining(); ok {
+		if err := xaccount.RateLimitRemainingValidator(v); err != nil {
+			return &ValidationError{Name: "rate_limit_remaining", err: fmt.Errorf(`ent: validator failed for field "XAccount.rate_limit_remaining": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "XAccount.created_at"`)}
@@ -286,6 +370,14 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 		_spec.SetField(xaccount.FieldProfileImageURL, field.TypeString, value)
 		_node.ProfileImageURL = &value
 	}
+	if value, ok := _c.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+		_node.SubscriptionType = value
+	}
+	if value, ok := _c.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+		_node.SubscriptionCheckedAt = &value
+	}
 	if value, ok := _c.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)
 		_node.AccessToken = value
@@ -301,6 +393,14 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Scopes(); ok {
 		_spec.SetField(xaccount.FieldScopes, field.TypeJSON, value)
 		_node.Scopes = value
+	}
+	if value, ok := _c.mutation.RateLimitRemaining(); ok {
+		_spec.SetField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+		_node.RateLimitRemaining = &value
+	}
+	if value, ok := _c.mutation.RateLimitResetAt(); ok {
+		_spec.SetField(xaccount.FieldRateLimitResetAt, field.TypeTime, value)
+		_node.RateLimitResetAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(xaccount.FieldCreatedAt, field.TypeTime, value)
@@ -325,6 +425,22 @@ func (_c *XAccountCreate) createSpec() (*XAccount, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_x_accounts = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

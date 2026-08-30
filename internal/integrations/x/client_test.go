@@ -2,6 +2,7 @@ package xintegration
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -10,6 +11,29 @@ import (
 	"testing"
 	"time"
 )
+
+func TestXClientParsesSubscriptionTypeForwardCompatibly(t *testing.T) {
+	for _, subscriptionType := range []string{"None", "Basic", "Premium", "PremiumPlus", "FutureTier"} {
+		t.Run(subscriptionType, func(t *testing.T) {
+			httpClient := &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+				if got := request.URL.Query().Get("user.fields"); got != "profile_image_url,subscription_type" {
+					t.Errorf("user.fields = %q, want profile_image_url,subscription_type", got)
+				}
+				body := fmt.Sprintf(`{"data":{"id":"x-123","username":"person","name":"A Person","subscription_type":%q}}`, subscriptionType)
+				return jsonResponse(http.StatusOK, body), nil
+			})}
+			client := NewXClient("client-id", "client-secret", "https://app.example/x/callback", httpClient, XEndpoints{APIBaseURL: "https://x.example"})
+
+			profile, err := client.CurrentUser(context.Background(), "access-token")
+			if err != nil {
+				t.Fatalf("CurrentUser() error = %v", err)
+			}
+			if profile.SubscriptionType != subscriptionType {
+				t.Fatalf("SubscriptionType = %q, want %q", profile.SubscriptionType, subscriptionType)
+			}
+		})
+	}
+}
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
 

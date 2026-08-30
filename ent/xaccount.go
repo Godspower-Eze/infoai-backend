@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/godspowere/infoai-backend/ent/user"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
 )
 
@@ -28,6 +28,10 @@ type XAccount struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// ProfileImageURL holds the value of the "profile_image_url" field.
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
+	// SubscriptionType holds the value of the "subscription_type" field.
+	SubscriptionType string `json:"subscription_type,omitempty"`
+	// SubscriptionCheckedAt holds the value of the "subscription_checked_at" field.
+	SubscriptionCheckedAt *time.Time `json:"subscription_checked_at,omitempty"`
 	// AccessToken holds the value of the "access_token" field.
 	AccessToken []byte `json:"-"`
 	// RefreshToken holds the value of the "refresh_token" field.
@@ -36,6 +40,10 @@ type XAccount struct {
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 	// Scopes holds the value of the "scopes" field.
 	Scopes []string `json:"scopes,omitempty"`
+	// RateLimitRemaining holds the value of the "rate_limit_remaining" field.
+	RateLimitRemaining *int `json:"rate_limit_remaining,omitempty"`
+	// RateLimitResetAt holds the value of the "rate_limit_reset_at" field.
+	RateLimitResetAt *time.Time `json:"rate_limit_reset_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -51,9 +59,11 @@ type XAccount struct {
 type XAccountEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner *User `json:"owner,omitempty"`
+	// Posts holds the value of the posts edge.
+	Posts []*Post `json:"posts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -67,6 +77,15 @@ func (e XAccountEdges) OwnerOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
+// PostsOrErr returns the Posts value or an error if the edge
+// was not loaded in eager-loading.
+func (e XAccountEdges) PostsOrErr() ([]*Post, error) {
+	if e.loadedTypes[1] {
+		return e.Posts, nil
+	}
+	return nil, &NotLoadedError{edge: "posts"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*XAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -74,9 +93,11 @@ func (*XAccount) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case xaccount.FieldAccessToken, xaccount.FieldRefreshToken, xaccount.FieldScopes:
 			values[i] = new([]byte)
-		case xaccount.FieldXUserID, xaccount.FieldUsername, xaccount.FieldDisplayName, xaccount.FieldProfileImageURL:
+		case xaccount.FieldRateLimitRemaining:
+			values[i] = new(sql.NullInt64)
+		case xaccount.FieldXUserID, xaccount.FieldUsername, xaccount.FieldDisplayName, xaccount.FieldProfileImageURL, xaccount.FieldSubscriptionType:
 			values[i] = new(sql.NullString)
-		case xaccount.FieldTokenExpiry, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
+		case xaccount.FieldSubscriptionCheckedAt, xaccount.FieldTokenExpiry, xaccount.FieldRateLimitResetAt, xaccount.FieldCreatedAt, xaccount.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case xaccount.FieldID:
 			values[i] = new(uuid.UUID)
@@ -128,6 +149,19 @@ func (_m *XAccount) assignValues(columns []string, values []any) error {
 				_m.ProfileImageURL = new(string)
 				*_m.ProfileImageURL = value.String
 			}
+		case xaccount.FieldSubscriptionType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_type", values[i])
+			} else if value.Valid {
+				_m.SubscriptionType = value.String
+			}
+		case xaccount.FieldSubscriptionCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_checked_at", values[i])
+			} else if value.Valid {
+				_m.SubscriptionCheckedAt = new(time.Time)
+				*_m.SubscriptionCheckedAt = value.Time
+			}
 		case xaccount.FieldAccessToken:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field access_token", values[i])
@@ -153,6 +187,20 @@ func (_m *XAccount) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &_m.Scopes); err != nil {
 					return fmt.Errorf("unmarshal field scopes: %w", err)
 				}
+			}
+		case xaccount.FieldRateLimitRemaining:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_limit_remaining", values[i])
+			} else if value.Valid {
+				_m.RateLimitRemaining = new(int)
+				*_m.RateLimitRemaining = int(value.Int64)
+			}
+		case xaccount.FieldRateLimitResetAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field rate_limit_reset_at", values[i])
+			} else if value.Valid {
+				_m.RateLimitResetAt = new(time.Time)
+				*_m.RateLimitResetAt = value.Time
 			}
 		case xaccount.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -189,6 +237,11 @@ func (_m *XAccount) Value(name string) (ent.Value, error) {
 // QueryOwner queries the "owner" edge of the XAccount entity.
 func (_m *XAccount) QueryOwner() *UserQuery {
 	return NewXAccountClient(_m.config).QueryOwner(_m)
+}
+
+// QueryPosts queries the "posts" edge of the XAccount entity.
+func (_m *XAccount) QueryPosts() *PostQuery {
+	return NewXAccountClient(_m.config).QueryPosts(_m)
 }
 
 // Update returns a builder for updating this XAccount.
@@ -228,6 +281,14 @@ func (_m *XAccount) String() string {
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
+	builder.WriteString("subscription_type=")
+	builder.WriteString(_m.SubscriptionType)
+	builder.WriteString(", ")
+	if v := _m.SubscriptionCheckedAt; v != nil {
+		builder.WriteString("subscription_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
 	builder.WriteString("access_token=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("refresh_token=<sensitive>")
@@ -237,6 +298,16 @@ func (_m *XAccount) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("scopes=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Scopes))
+	builder.WriteString(", ")
+	if v := _m.RateLimitRemaining; v != nil {
+		builder.WriteString("rate_limit_remaining=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.RateLimitResetAt; v != nil {
+		builder.WriteString("rate_limit_reset_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

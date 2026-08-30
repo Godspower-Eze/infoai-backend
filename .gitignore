@@ -2,4 +2,7 @@
 bin/
 coverage.out
 /api
+/worker
+/var/
 /docs/superpowers/
+/.superpowers/

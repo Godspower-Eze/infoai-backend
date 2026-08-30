@@ -12,8 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/predicate"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/predicate"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
+	"github.com/google/uuid"
 )
 
 // XAccountUpdate is the builder for updating XAccount entities.
@@ -77,6 +79,40 @@ func (_u *XAccountUpdate) ClearProfileImageURL() *XAccountUpdate {
 	return _u
 }
 
+// SetSubscriptionType sets the "subscription_type" field.
+func (_u *XAccountUpdate) SetSubscriptionType(v string) *XAccountUpdate {
+	_u.mutation.SetSubscriptionType(v)
+	return _u
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableSubscriptionType(v *string) *XAccountUpdate {
+	if v != nil {
+		_u.SetSubscriptionType(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_u *XAccountUpdate) SetSubscriptionCheckedAt(v time.Time) *XAccountUpdate {
+	_u.mutation.SetSubscriptionCheckedAt(v)
+	return _u
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountUpdate {
+	if v != nil {
+		_u.SetSubscriptionCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubscriptionCheckedAt clears the value of the "subscription_checked_at" field.
+func (_u *XAccountUpdate) ClearSubscriptionCheckedAt() *XAccountUpdate {
+	_u.mutation.ClearSubscriptionCheckedAt()
+	return _u
+}
+
 // SetAccessToken sets the "access_token" field.
 func (_u *XAccountUpdate) SetAccessToken(v []byte) *XAccountUpdate {
 	_u.mutation.SetAccessToken(v)
@@ -121,15 +157,98 @@ func (_u *XAccountUpdate) AppendScopes(v []string) *XAccountUpdate {
 	return _u
 }
 
+// SetRateLimitRemaining sets the "rate_limit_remaining" field.
+func (_u *XAccountUpdate) SetRateLimitRemaining(v int) *XAccountUpdate {
+	_u.mutation.ResetRateLimitRemaining()
+	_u.mutation.SetRateLimitRemaining(v)
+	return _u
+}
+
+// SetNillableRateLimitRemaining sets the "rate_limit_remaining" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableRateLimitRemaining(v *int) *XAccountUpdate {
+	if v != nil {
+		_u.SetRateLimitRemaining(*v)
+	}
+	return _u
+}
+
+// AddRateLimitRemaining adds value to the "rate_limit_remaining" field.
+func (_u *XAccountUpdate) AddRateLimitRemaining(v int) *XAccountUpdate {
+	_u.mutation.AddRateLimitRemaining(v)
+	return _u
+}
+
+// ClearRateLimitRemaining clears the value of the "rate_limit_remaining" field.
+func (_u *XAccountUpdate) ClearRateLimitRemaining() *XAccountUpdate {
+	_u.mutation.ClearRateLimitRemaining()
+	return _u
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (_u *XAccountUpdate) SetRateLimitResetAt(v time.Time) *XAccountUpdate {
+	_u.mutation.SetRateLimitResetAt(v)
+	return _u
+}
+
+// SetNillableRateLimitResetAt sets the "rate_limit_reset_at" field if the given value is not nil.
+func (_u *XAccountUpdate) SetNillableRateLimitResetAt(v *time.Time) *XAccountUpdate {
+	if v != nil {
+		_u.SetRateLimitResetAt(*v)
+	}
+	return _u
+}
+
+// ClearRateLimitResetAt clears the value of the "rate_limit_reset_at" field.
+func (_u *XAccountUpdate) ClearRateLimitResetAt() *XAccountUpdate {
+	_u.mutation.ClearRateLimitResetAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *XAccountUpdate) SetUpdatedAt(v time.Time) *XAccountUpdate {
 	_u.mutation.SetUpdatedAt(v)
 	return _u
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_u *XAccountUpdate) AddPostIDs(ids ...uuid.UUID) *XAccountUpdate {
+	_u.mutation.AddPostIDs(ids...)
+	return _u
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_u *XAccountUpdate) AddPosts(v ...*Post) *XAccountUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPostIDs(ids...)
+}
+
 // Mutation returns the XAccountMutation object of the builder.
 func (_u *XAccountUpdate) Mutation() *XAccountMutation {
 	return _u.mutation
+}
+
+// ClearPosts clears all "posts" edges to the Post entity.
+func (_u *XAccountUpdate) ClearPosts() *XAccountUpdate {
+	_u.mutation.ClearPosts()
+	return _u
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (_u *XAccountUpdate) RemovePostIDs(ids ...uuid.UUID) *XAccountUpdate {
+	_u.mutation.RemovePostIDs(ids...)
+	return _u
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (_u *XAccountUpdate) RemovePosts(v ...*Post) *XAccountUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePostIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -175,6 +294,11 @@ func (_u *XAccountUpdate) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "XAccount.username": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RateLimitRemaining(); ok {
+		if err := xaccount.RateLimitRemainingValidator(v); err != nil {
+			return &ValidationError{Name: "rate_limit_remaining", err: fmt.Errorf(`ent: validator failed for field "XAccount.rate_limit_remaining": %w`, err)}
+		}
+	}
 	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "XAccount.owner"`)
 	}
@@ -205,6 +329,15 @@ func (_u *XAccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ProfileImageURLCleared() {
 		_spec.ClearField(xaccount.FieldProfileImageURL, field.TypeString)
 	}
+	if value, ok := _u.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubscriptionCheckedAtCleared() {
+		_spec.ClearField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)
 	}
@@ -225,8 +358,68 @@ func (_u *XAccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			sqljson.Append(u, xaccount.FieldScopes, value)
 		})
 	}
+	if value, ok := _u.mutation.RateLimitRemaining(); ok {
+		_spec.SetField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedRateLimitRemaining(); ok {
+		_spec.AddField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+	}
+	if _u.mutation.RateLimitRemainingCleared() {
+		_spec.ClearField(xaccount.FieldRateLimitRemaining, field.TypeInt)
+	}
+	if value, ok := _u.mutation.RateLimitResetAt(); ok {
+		_spec.SetField(xaccount.FieldRateLimitResetAt, field.TypeTime, value)
+	}
+	if _u.mutation.RateLimitResetAtCleared() {
+		_spec.ClearField(xaccount.FieldRateLimitResetAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(xaccount.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPostsIDs(); len(nodes) > 0 && !_u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -296,6 +489,40 @@ func (_u *XAccountUpdateOne) ClearProfileImageURL() *XAccountUpdateOne {
 	return _u
 }
 
+// SetSubscriptionType sets the "subscription_type" field.
+func (_u *XAccountUpdateOne) SetSubscriptionType(v string) *XAccountUpdateOne {
+	_u.mutation.SetSubscriptionType(v)
+	return _u
+}
+
+// SetNillableSubscriptionType sets the "subscription_type" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableSubscriptionType(v *string) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionType(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionCheckedAt sets the "subscription_checked_at" field.
+func (_u *XAccountUpdateOne) SetSubscriptionCheckedAt(v time.Time) *XAccountUpdateOne {
+	_u.mutation.SetSubscriptionCheckedAt(v)
+	return _u
+}
+
+// SetNillableSubscriptionCheckedAt sets the "subscription_checked_at" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableSubscriptionCheckedAt(v *time.Time) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearSubscriptionCheckedAt clears the value of the "subscription_checked_at" field.
+func (_u *XAccountUpdateOne) ClearSubscriptionCheckedAt() *XAccountUpdateOne {
+	_u.mutation.ClearSubscriptionCheckedAt()
+	return _u
+}
+
 // SetAccessToken sets the "access_token" field.
 func (_u *XAccountUpdateOne) SetAccessToken(v []byte) *XAccountUpdateOne {
 	_u.mutation.SetAccessToken(v)
@@ -340,15 +567,98 @@ func (_u *XAccountUpdateOne) AppendScopes(v []string) *XAccountUpdateOne {
 	return _u
 }
 
+// SetRateLimitRemaining sets the "rate_limit_remaining" field.
+func (_u *XAccountUpdateOne) SetRateLimitRemaining(v int) *XAccountUpdateOne {
+	_u.mutation.ResetRateLimitRemaining()
+	_u.mutation.SetRateLimitRemaining(v)
+	return _u
+}
+
+// SetNillableRateLimitRemaining sets the "rate_limit_remaining" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableRateLimitRemaining(v *int) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetRateLimitRemaining(*v)
+	}
+	return _u
+}
+
+// AddRateLimitRemaining adds value to the "rate_limit_remaining" field.
+func (_u *XAccountUpdateOne) AddRateLimitRemaining(v int) *XAccountUpdateOne {
+	_u.mutation.AddRateLimitRemaining(v)
+	return _u
+}
+
+// ClearRateLimitRemaining clears the value of the "rate_limit_remaining" field.
+func (_u *XAccountUpdateOne) ClearRateLimitRemaining() *XAccountUpdateOne {
+	_u.mutation.ClearRateLimitRemaining()
+	return _u
+}
+
+// SetRateLimitResetAt sets the "rate_limit_reset_at" field.
+func (_u *XAccountUpdateOne) SetRateLimitResetAt(v time.Time) *XAccountUpdateOne {
+	_u.mutation.SetRateLimitResetAt(v)
+	return _u
+}
+
+// SetNillableRateLimitResetAt sets the "rate_limit_reset_at" field if the given value is not nil.
+func (_u *XAccountUpdateOne) SetNillableRateLimitResetAt(v *time.Time) *XAccountUpdateOne {
+	if v != nil {
+		_u.SetRateLimitResetAt(*v)
+	}
+	return _u
+}
+
+// ClearRateLimitResetAt clears the value of the "rate_limit_reset_at" field.
+func (_u *XAccountUpdateOne) ClearRateLimitResetAt() *XAccountUpdateOne {
+	_u.mutation.ClearRateLimitResetAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *XAccountUpdateOne) SetUpdatedAt(v time.Time) *XAccountUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
 	return _u
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_u *XAccountUpdateOne) AddPostIDs(ids ...uuid.UUID) *XAccountUpdateOne {
+	_u.mutation.AddPostIDs(ids...)
+	return _u
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_u *XAccountUpdateOne) AddPosts(v ...*Post) *XAccountUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPostIDs(ids...)
+}
+
 // Mutation returns the XAccountMutation object of the builder.
 func (_u *XAccountUpdateOne) Mutation() *XAccountMutation {
 	return _u.mutation
+}
+
+// ClearPosts clears all "posts" edges to the Post entity.
+func (_u *XAccountUpdateOne) ClearPosts() *XAccountUpdateOne {
+	_u.mutation.ClearPosts()
+	return _u
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (_u *XAccountUpdateOne) RemovePostIDs(ids ...uuid.UUID) *XAccountUpdateOne {
+	_u.mutation.RemovePostIDs(ids...)
+	return _u
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (_u *XAccountUpdateOne) RemovePosts(v ...*Post) *XAccountUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePostIDs(ids...)
 }
 
 // Where appends a list predicates to the XAccountUpdate builder.
@@ -407,6 +717,11 @@ func (_u *XAccountUpdateOne) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "XAccount.username": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.RateLimitRemaining(); ok {
+		if err := xaccount.RateLimitRemainingValidator(v); err != nil {
+			return &ValidationError{Name: "rate_limit_remaining", err: fmt.Errorf(`ent: validator failed for field "XAccount.rate_limit_remaining": %w`, err)}
+		}
+	}
 	if _u.mutation.OwnerCleared() && len(_u.mutation.OwnerIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "XAccount.owner"`)
 	}
@@ -454,6 +769,15 @@ func (_u *XAccountUpdateOne) sqlSave(ctx context.Context) (_node *XAccount, err 
 	if _u.mutation.ProfileImageURLCleared() {
 		_spec.ClearField(xaccount.FieldProfileImageURL, field.TypeString)
 	}
+	if value, ok := _u.mutation.SubscriptionType(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionCheckedAt(); ok {
+		_spec.SetField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.SubscriptionCheckedAtCleared() {
+		_spec.ClearField(xaccount.FieldSubscriptionCheckedAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.AccessToken(); ok {
 		_spec.SetField(xaccount.FieldAccessToken, field.TypeBytes, value)
 	}
@@ -474,8 +798,68 @@ func (_u *XAccountUpdateOne) sqlSave(ctx context.Context) (_node *XAccount, err 
 			sqljson.Append(u, xaccount.FieldScopes, value)
 		})
 	}
+	if value, ok := _u.mutation.RateLimitRemaining(); ok {
+		_spec.SetField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedRateLimitRemaining(); ok {
+		_spec.AddField(xaccount.FieldRateLimitRemaining, field.TypeInt, value)
+	}
+	if _u.mutation.RateLimitRemainingCleared() {
+		_spec.ClearField(xaccount.FieldRateLimitRemaining, field.TypeInt)
+	}
+	if value, ok := _u.mutation.RateLimitResetAt(); ok {
+		_spec.SetField(xaccount.FieldRateLimitResetAt, field.TypeTime, value)
+	}
+	if _u.mutation.RateLimitResetAtCleared() {
+		_spec.ClearField(xaccount.FieldRateLimitResetAt, field.TypeTime)
+	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(xaccount.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPostsIDs(); len(nodes) > 0 && !_u.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   xaccount.PostsTable,
+			Columns: []string{xaccount.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &XAccount{config: _u.config}
 	_spec.Assign = _node.assignValues

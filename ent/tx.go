@@ -12,8 +12,18 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// Post is the client for interacting with the Post builders.
+	Post *PostClient
+	// PostItem is the client for interacting with the PostItem builders.
+	PostItem *PostItemClient
+	// PublicationAttempt is the client for interacting with the PublicationAttempt builders.
+	PublicationAttempt *PublicationAttemptClient
 	// SCSSession is the client for interacting with the SCSSession builders.
 	SCSSession *SCSSessionClient
+	// StorageDeletion is the client for interacting with the StorageDeletion builders.
+	StorageDeletion *StorageDeletionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// XAccount is the client for interacting with the XAccount builders.
@@ -149,7 +159,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.MediaAsset = NewMediaAssetClient(tx.config)
+	tx.Post = NewPostClient(tx.config)
+	tx.PostItem = NewPostItemClient(tx.config)
+	tx.PublicationAttempt = NewPublicationAttemptClient(tx.config)
 	tx.SCSSession = NewSCSSessionClient(tx.config)
+	tx.StorageDeletion = NewStorageDeletionClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.XAccount = NewXAccountClient(tx.config)
 }
@@ -161,7 +176,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: SCSSession.QueryXXX(), the query will be executed
+// applies a query, for example: MediaAsset.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

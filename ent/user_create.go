@@ -10,8 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/godspowere/infoai-backend/ent/user"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/google/uuid"
 )
 
@@ -89,6 +91,36 @@ func (_c *UserCreate) AddXAccounts(v ...*XAccount) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddXAccountIDs(ids...)
+}
+
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (_c *UserCreate) AddPostIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddPostIDs(ids...)
+	return _c
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (_c *UserCreate) AddPosts(v ...*Post) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPostIDs(ids...)
+}
+
+// AddMediaAssetIDs adds the "media_assets" edge to the MediaAsset entity by IDs.
+func (_c *UserCreate) AddMediaAssetIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddMediaAssetIDs(ids...)
+	return _c
+}
+
+// AddMediaAssets adds the "media_assets" edges to the MediaAsset entity.
+func (_c *UserCreate) AddMediaAssets(v ...*MediaAsset) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMediaAssetIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -224,6 +256,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(xaccount.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PostsTable,
+			Columns: []string{user.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MediaAssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaAssetsTable,
+			Columns: []string{user.MediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

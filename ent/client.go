@@ -9,16 +9,21 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/godspowere/infoai-backend/ent/migrate"
+	"github.com/Godspower-Eze/infoai-backend/ent/migrate"
 	"github.com/google/uuid"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/godspowere/infoai-backend/ent/scssession"
-	"github.com/godspowere/infoai-backend/ent/user"
-	"github.com/godspowere/infoai-backend/ent/xaccount"
+	"github.com/Godspower-Eze/infoai-backend/ent/mediaasset"
+	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/postitem"
+	"github.com/Godspower-Eze/infoai-backend/ent/publicationattempt"
+	"github.com/Godspower-Eze/infoai-backend/ent/scssession"
+	"github.com/Godspower-Eze/infoai-backend/ent/storagedeletion"
+	"github.com/Godspower-Eze/infoai-backend/ent/user"
+	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 )
 
 // Client is the client that holds all ent builders.
@@ -26,8 +31,18 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// Post is the client for interacting with the Post builders.
+	Post *PostClient
+	// PostItem is the client for interacting with the PostItem builders.
+	PostItem *PostItemClient
+	// PublicationAttempt is the client for interacting with the PublicationAttempt builders.
+	PublicationAttempt *PublicationAttemptClient
 	// SCSSession is the client for interacting with the SCSSession builders.
 	SCSSession *SCSSessionClient
+	// StorageDeletion is the client for interacting with the StorageDeletion builders.
+	StorageDeletion *StorageDeletionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// XAccount is the client for interacting with the XAccount builders.
@@ -43,7 +58,12 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.MediaAsset = NewMediaAssetClient(c.config)
+	c.Post = NewPostClient(c.config)
+	c.PostItem = NewPostItemClient(c.config)
+	c.PublicationAttempt = NewPublicationAttemptClient(c.config)
 	c.SCSSession = NewSCSSessionClient(c.config)
+	c.StorageDeletion = NewStorageDeletionClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.XAccount = NewXAccountClient(c.config)
 }
@@ -136,11 +156,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		SCSSession: NewSCSSessionClient(cfg),
-		User:       NewUserClient(cfg),
-		XAccount:   NewXAccountClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		MediaAsset:         NewMediaAssetClient(cfg),
+		Post:               NewPostClient(cfg),
+		PostItem:           NewPostItemClient(cfg),
+		PublicationAttempt: NewPublicationAttemptClient(cfg),
+		SCSSession:         NewSCSSessionClient(cfg),
+		StorageDeletion:    NewStorageDeletionClient(cfg),
+		User:               NewUserClient(cfg),
+		XAccount:           NewXAccountClient(cfg),
 	}, nil
 }
 
@@ -158,18 +183,23 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		SCSSession: NewSCSSessionClient(cfg),
-		User:       NewUserClient(cfg),
-		XAccount:   NewXAccountClient(cfg),
+		ctx:                ctx,
+		config:             cfg,
+		MediaAsset:         NewMediaAssetClient(cfg),
+		Post:               NewPostClient(cfg),
+		PostItem:           NewPostItemClient(cfg),
+		PublicationAttempt: NewPublicationAttemptClient(cfg),
+		SCSSession:         NewSCSSessionClient(cfg),
+		StorageDeletion:    NewStorageDeletionClient(cfg),
+		User:               NewUserClient(cfg),
+		XAccount:           NewXAccountClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		SCSSession.
+//		MediaAsset.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -191,30 +221,722 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.SCSSession.Use(hooks...)
-	c.User.Use(hooks...)
-	c.XAccount.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.MediaAsset, c.Post, c.PostItem, c.PublicationAttempt, c.SCSSession,
+		c.StorageDeletion, c.User, c.XAccount,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.SCSSession.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
-	c.XAccount.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.MediaAsset, c.Post, c.PostItem, c.PublicationAttempt, c.SCSSession,
+		c.StorageDeletion, c.User, c.XAccount,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *MediaAssetMutation:
+		return c.MediaAsset.mutate(ctx, m)
+	case *PostMutation:
+		return c.Post.mutate(ctx, m)
+	case *PostItemMutation:
+		return c.PostItem.mutate(ctx, m)
+	case *PublicationAttemptMutation:
+		return c.PublicationAttempt.mutate(ctx, m)
 	case *SCSSessionMutation:
 		return c.SCSSession.mutate(ctx, m)
+	case *StorageDeletionMutation:
+		return c.StorageDeletion.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *XAccountMutation:
 		return c.XAccount.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// MediaAssetClient is a client for the MediaAsset schema.
+type MediaAssetClient struct {
+	config
+}
+
+// NewMediaAssetClient returns a client for the MediaAsset from the given config.
+func NewMediaAssetClient(c config) *MediaAssetClient {
+	return &MediaAssetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediaasset.Hooks(f(g(h())))`.
+func (c *MediaAssetClient) Use(hooks ...Hook) {
+	c.hooks.MediaAsset = append(c.hooks.MediaAsset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediaasset.Intercept(f(g(h())))`.
+func (c *MediaAssetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaAsset = append(c.inters.MediaAsset, interceptors...)
+}
+
+// Create returns a builder for creating a MediaAsset entity.
+func (c *MediaAssetClient) Create() *MediaAssetCreate {
+	mutation := newMediaAssetMutation(c.config, OpCreate)
+	return &MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaAsset entities.
+func (c *MediaAssetClient) CreateBulk(builders ...*MediaAssetCreate) *MediaAssetCreateBulk {
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaAssetClient) MapCreateBulk(slice any, setFunc func(*MediaAssetCreate, int)) *MediaAssetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaAssetCreateBulk{err: fmt.Errorf("calling to MediaAssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaAssetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaAsset.
+func (c *MediaAssetClient) Update() *MediaAssetUpdate {
+	mutation := newMediaAssetMutation(c.config, OpUpdate)
+	return &MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaAssetClient) UpdateOne(_m *MediaAsset) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAsset(_m))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaAssetClient) UpdateOneID(id uuid.UUID) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAssetID(id))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaAsset.
+func (c *MediaAssetClient) Delete() *MediaAssetDelete {
+	mutation := newMediaAssetMutation(c.config, OpDelete)
+	return &MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaAssetClient) DeleteOne(_m *MediaAsset) *MediaAssetDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaAssetClient) DeleteOneID(id uuid.UUID) *MediaAssetDeleteOne {
+	builder := c.Delete().Where(mediaasset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaAssetDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaAsset.
+func (c *MediaAssetClient) Query() *MediaAssetQuery {
+	return &MediaAssetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaAsset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaAsset entity by its id.
+func (c *MediaAssetClient) Get(ctx context.Context, id uuid.UUID) (*MediaAsset, error) {
+	return c.Query().Where(mediaasset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaAssetClient) GetX(ctx context.Context, id uuid.UUID) *MediaAsset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a MediaAsset.
+func (c *MediaAssetClient) QueryOwner(_m *MediaAsset) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaasset.Table, mediaasset.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, mediaasset.OwnerTable, mediaasset.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPostItem queries the post_item edge of a MediaAsset.
+func (c *MediaAssetClient) QueryPostItem(_m *MediaAsset) *PostItemQuery {
+	query := (&PostItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaasset.Table, mediaasset.FieldID, id),
+			sqlgraph.To(postitem.Table, postitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, mediaasset.PostItemTable, mediaasset.PostItemColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MediaAssetClient) Hooks() []Hook {
+	return c.hooks.MediaAsset
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaAssetClient) Interceptors() []Interceptor {
+	return c.inters.MediaAsset
+}
+
+func (c *MediaAssetClient) mutate(ctx context.Context, m *MediaAssetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaAsset mutation op: %q", m.Op())
+	}
+}
+
+// PostClient is a client for the Post schema.
+type PostClient struct {
+	config
+}
+
+// NewPostClient returns a client for the Post from the given config.
+func NewPostClient(c config) *PostClient {
+	return &PostClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `post.Hooks(f(g(h())))`.
+func (c *PostClient) Use(hooks ...Hook) {
+	c.hooks.Post = append(c.hooks.Post, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `post.Intercept(f(g(h())))`.
+func (c *PostClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Post = append(c.inters.Post, interceptors...)
+}
+
+// Create returns a builder for creating a Post entity.
+func (c *PostClient) Create() *PostCreate {
+	mutation := newPostMutation(c.config, OpCreate)
+	return &PostCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Post entities.
+func (c *PostClient) CreateBulk(builders ...*PostCreate) *PostCreateBulk {
+	return &PostCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PostClient) MapCreateBulk(slice any, setFunc func(*PostCreate, int)) *PostCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PostCreateBulk{err: fmt.Errorf("calling to PostClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PostCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PostCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Post.
+func (c *PostClient) Update() *PostUpdate {
+	mutation := newPostMutation(c.config, OpUpdate)
+	return &PostUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PostClient) UpdateOne(_m *Post) *PostUpdateOne {
+	mutation := newPostMutation(c.config, OpUpdateOne, withPost(_m))
+	return &PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PostClient) UpdateOneID(id uuid.UUID) *PostUpdateOne {
+	mutation := newPostMutation(c.config, OpUpdateOne, withPostID(id))
+	return &PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Post.
+func (c *PostClient) Delete() *PostDelete {
+	mutation := newPostMutation(c.config, OpDelete)
+	return &PostDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PostClient) DeleteOne(_m *Post) *PostDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PostClient) DeleteOneID(id uuid.UUID) *PostDeleteOne {
+	builder := c.Delete().Where(post.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PostDeleteOne{builder}
+}
+
+// Query returns a query builder for Post.
+func (c *PostClient) Query() *PostQuery {
+	return &PostQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePost},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Post entity by its id.
+func (c *PostClient) Get(ctx context.Context, id uuid.UUID) (*Post, error) {
+	return c.Query().Where(post.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PostClient) GetX(ctx context.Context, id uuid.UUID) *Post {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a Post.
+func (c *PostClient) QueryOwner(_m *Post) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(post.Table, post.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, post.OwnerTable, post.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryXAccount queries the x_account edge of a Post.
+func (c *PostClient) QueryXAccount(_m *Post) *XAccountQuery {
+	query := (&XAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(post.Table, post.FieldID, id),
+			sqlgraph.To(xaccount.Table, xaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, post.XAccountTable, post.XAccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryItems queries the items edge of a Post.
+func (c *PostClient) QueryItems(_m *Post) *PostItemQuery {
+	query := (&PostItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(post.Table, post.FieldID, id),
+			sqlgraph.To(postitem.Table, postitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, post.ItemsTable, post.ItemsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAttempts queries the attempts edge of a Post.
+func (c *PostClient) QueryAttempts(_m *Post) *PublicationAttemptQuery {
+	query := (&PublicationAttemptClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(post.Table, post.FieldID, id),
+			sqlgraph.To(publicationattempt.Table, publicationattempt.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, post.AttemptsTable, post.AttemptsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PostClient) Hooks() []Hook {
+	return c.hooks.Post
+}
+
+// Interceptors returns the client interceptors.
+func (c *PostClient) Interceptors() []Interceptor {
+	return c.inters.Post
+}
+
+func (c *PostClient) mutate(ctx context.Context, m *PostMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PostCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PostUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PostDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Post mutation op: %q", m.Op())
+	}
+}
+
+// PostItemClient is a client for the PostItem schema.
+type PostItemClient struct {
+	config
+}
+
+// NewPostItemClient returns a client for the PostItem from the given config.
+func NewPostItemClient(c config) *PostItemClient {
+	return &PostItemClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `postitem.Hooks(f(g(h())))`.
+func (c *PostItemClient) Use(hooks ...Hook) {
+	c.hooks.PostItem = append(c.hooks.PostItem, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `postitem.Intercept(f(g(h())))`.
+func (c *PostItemClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PostItem = append(c.inters.PostItem, interceptors...)
+}
+
+// Create returns a builder for creating a PostItem entity.
+func (c *PostItemClient) Create() *PostItemCreate {
+	mutation := newPostItemMutation(c.config, OpCreate)
+	return &PostItemCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PostItem entities.
+func (c *PostItemClient) CreateBulk(builders ...*PostItemCreate) *PostItemCreateBulk {
+	return &PostItemCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PostItemClient) MapCreateBulk(slice any, setFunc func(*PostItemCreate, int)) *PostItemCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PostItemCreateBulk{err: fmt.Errorf("calling to PostItemClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PostItemCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PostItemCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PostItem.
+func (c *PostItemClient) Update() *PostItemUpdate {
+	mutation := newPostItemMutation(c.config, OpUpdate)
+	return &PostItemUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PostItemClient) UpdateOne(_m *PostItem) *PostItemUpdateOne {
+	mutation := newPostItemMutation(c.config, OpUpdateOne, withPostItem(_m))
+	return &PostItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PostItemClient) UpdateOneID(id uuid.UUID) *PostItemUpdateOne {
+	mutation := newPostItemMutation(c.config, OpUpdateOne, withPostItemID(id))
+	return &PostItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PostItem.
+func (c *PostItemClient) Delete() *PostItemDelete {
+	mutation := newPostItemMutation(c.config, OpDelete)
+	return &PostItemDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PostItemClient) DeleteOne(_m *PostItem) *PostItemDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PostItemClient) DeleteOneID(id uuid.UUID) *PostItemDeleteOne {
+	builder := c.Delete().Where(postitem.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PostItemDeleteOne{builder}
+}
+
+// Query returns a query builder for PostItem.
+func (c *PostItemClient) Query() *PostItemQuery {
+	return &PostItemQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePostItem},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PostItem entity by its id.
+func (c *PostItemClient) Get(ctx context.Context, id uuid.UUID) (*PostItem, error) {
+	return c.Query().Where(postitem.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PostItemClient) GetX(ctx context.Context, id uuid.UUID) *PostItem {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPost queries the post edge of a PostItem.
+func (c *PostItemClient) QueryPost(_m *PostItem) *PostQuery {
+	query := (&PostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(postitem.Table, postitem.FieldID, id),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, postitem.PostTable, postitem.PostColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMediaAssets queries the media_assets edge of a PostItem.
+func (c *PostItemClient) QueryMediaAssets(_m *PostItem) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(postitem.Table, postitem.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, postitem.MediaAssetsTable, postitem.MediaAssetsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PostItemClient) Hooks() []Hook {
+	return c.hooks.PostItem
+}
+
+// Interceptors returns the client interceptors.
+func (c *PostItemClient) Interceptors() []Interceptor {
+	return c.inters.PostItem
+}
+
+func (c *PostItemClient) mutate(ctx context.Context, m *PostItemMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PostItemCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PostItemUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PostItemUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PostItemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PostItem mutation op: %q", m.Op())
+	}
+}
+
+// PublicationAttemptClient is a client for the PublicationAttempt schema.
+type PublicationAttemptClient struct {
+	config
+}
+
+// NewPublicationAttemptClient returns a client for the PublicationAttempt from the given config.
+func NewPublicationAttemptClient(c config) *PublicationAttemptClient {
+	return &PublicationAttemptClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `publicationattempt.Hooks(f(g(h())))`.
+func (c *PublicationAttemptClient) Use(hooks ...Hook) {
+	c.hooks.PublicationAttempt = append(c.hooks.PublicationAttempt, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `publicationattempt.Intercept(f(g(h())))`.
+func (c *PublicationAttemptClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PublicationAttempt = append(c.inters.PublicationAttempt, interceptors...)
+}
+
+// Create returns a builder for creating a PublicationAttempt entity.
+func (c *PublicationAttemptClient) Create() *PublicationAttemptCreate {
+	mutation := newPublicationAttemptMutation(c.config, OpCreate)
+	return &PublicationAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PublicationAttempt entities.
+func (c *PublicationAttemptClient) CreateBulk(builders ...*PublicationAttemptCreate) *PublicationAttemptCreateBulk {
+	return &PublicationAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PublicationAttemptClient) MapCreateBulk(slice any, setFunc func(*PublicationAttemptCreate, int)) *PublicationAttemptCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PublicationAttemptCreateBulk{err: fmt.Errorf("calling to PublicationAttemptClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PublicationAttemptCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PublicationAttemptCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PublicationAttempt.
+func (c *PublicationAttemptClient) Update() *PublicationAttemptUpdate {
+	mutation := newPublicationAttemptMutation(c.config, OpUpdate)
+	return &PublicationAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PublicationAttemptClient) UpdateOne(_m *PublicationAttempt) *PublicationAttemptUpdateOne {
+	mutation := newPublicationAttemptMutation(c.config, OpUpdateOne, withPublicationAttempt(_m))
+	return &PublicationAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PublicationAttemptClient) UpdateOneID(id uuid.UUID) *PublicationAttemptUpdateOne {
+	mutation := newPublicationAttemptMutation(c.config, OpUpdateOne, withPublicationAttemptID(id))
+	return &PublicationAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PublicationAttempt.
+func (c *PublicationAttemptClient) Delete() *PublicationAttemptDelete {
+	mutation := newPublicationAttemptMutation(c.config, OpDelete)
+	return &PublicationAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PublicationAttemptClient) DeleteOne(_m *PublicationAttempt) *PublicationAttemptDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PublicationAttemptClient) DeleteOneID(id uuid.UUID) *PublicationAttemptDeleteOne {
+	builder := c.Delete().Where(publicationattempt.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PublicationAttemptDeleteOne{builder}
+}
+
+// Query returns a query builder for PublicationAttempt.
+func (c *PublicationAttemptClient) Query() *PublicationAttemptQuery {
+	return &PublicationAttemptQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePublicationAttempt},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PublicationAttempt entity by its id.
+func (c *PublicationAttemptClient) Get(ctx context.Context, id uuid.UUID) (*PublicationAttempt, error) {
+	return c.Query().Where(publicationattempt.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PublicationAttemptClient) GetX(ctx context.Context, id uuid.UUID) *PublicationAttempt {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryPost queries the post edge of a PublicationAttempt.
+func (c *PublicationAttemptClient) QueryPost(_m *PublicationAttempt) *PostQuery {
+	query := (&PostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(publicationattempt.Table, publicationattempt.FieldID, id),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, publicationattempt.PostTable, publicationattempt.PostColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PublicationAttemptClient) Hooks() []Hook {
+	return c.hooks.PublicationAttempt
+}
+
+// Interceptors returns the client interceptors.
+func (c *PublicationAttemptClient) Interceptors() []Interceptor {
+	return c.inters.PublicationAttempt
+}
+
+func (c *PublicationAttemptClient) mutate(ctx context.Context, m *PublicationAttemptMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PublicationAttemptCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PublicationAttemptUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PublicationAttemptUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PublicationAttemptDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PublicationAttempt mutation op: %q", m.Op())
 	}
 }
 
@@ -351,6 +1073,139 @@ func (c *SCSSessionClient) mutate(ctx context.Context, m *SCSSessionMutation) (V
 	}
 }
 
+// StorageDeletionClient is a client for the StorageDeletion schema.
+type StorageDeletionClient struct {
+	config
+}
+
+// NewStorageDeletionClient returns a client for the StorageDeletion from the given config.
+func NewStorageDeletionClient(c config) *StorageDeletionClient {
+	return &StorageDeletionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `storagedeletion.Hooks(f(g(h())))`.
+func (c *StorageDeletionClient) Use(hooks ...Hook) {
+	c.hooks.StorageDeletion = append(c.hooks.StorageDeletion, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `storagedeletion.Intercept(f(g(h())))`.
+func (c *StorageDeletionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StorageDeletion = append(c.inters.StorageDeletion, interceptors...)
+}
+
+// Create returns a builder for creating a StorageDeletion entity.
+func (c *StorageDeletionClient) Create() *StorageDeletionCreate {
+	mutation := newStorageDeletionMutation(c.config, OpCreate)
+	return &StorageDeletionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StorageDeletion entities.
+func (c *StorageDeletionClient) CreateBulk(builders ...*StorageDeletionCreate) *StorageDeletionCreateBulk {
+	return &StorageDeletionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *StorageDeletionClient) MapCreateBulk(slice any, setFunc func(*StorageDeletionCreate, int)) *StorageDeletionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &StorageDeletionCreateBulk{err: fmt.Errorf("calling to StorageDeletionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*StorageDeletionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &StorageDeletionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StorageDeletion.
+func (c *StorageDeletionClient) Update() *StorageDeletionUpdate {
+	mutation := newStorageDeletionMutation(c.config, OpUpdate)
+	return &StorageDeletionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StorageDeletionClient) UpdateOne(_m *StorageDeletion) *StorageDeletionUpdateOne {
+	mutation := newStorageDeletionMutation(c.config, OpUpdateOne, withStorageDeletion(_m))
+	return &StorageDeletionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StorageDeletionClient) UpdateOneID(id uuid.UUID) *StorageDeletionUpdateOne {
+	mutation := newStorageDeletionMutation(c.config, OpUpdateOne, withStorageDeletionID(id))
+	return &StorageDeletionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StorageDeletion.
+func (c *StorageDeletionClient) Delete() *StorageDeletionDelete {
+	mutation := newStorageDeletionMutation(c.config, OpDelete)
+	return &StorageDeletionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StorageDeletionClient) DeleteOne(_m *StorageDeletion) *StorageDeletionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StorageDeletionClient) DeleteOneID(id uuid.UUID) *StorageDeletionDeleteOne {
+	builder := c.Delete().Where(storagedeletion.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StorageDeletionDeleteOne{builder}
+}
+
+// Query returns a query builder for StorageDeletion.
+func (c *StorageDeletionClient) Query() *StorageDeletionQuery {
+	return &StorageDeletionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStorageDeletion},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StorageDeletion entity by its id.
+func (c *StorageDeletionClient) Get(ctx context.Context, id uuid.UUID) (*StorageDeletion, error) {
+	return c.Query().Where(storagedeletion.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StorageDeletionClient) GetX(ctx context.Context, id uuid.UUID) *StorageDeletion {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *StorageDeletionClient) Hooks() []Hook {
+	return c.hooks.StorageDeletion
+}
+
+// Interceptors returns the client interceptors.
+func (c *StorageDeletionClient) Interceptors() []Interceptor {
+	return c.inters.StorageDeletion
+}
+
+func (c *StorageDeletionClient) mutate(ctx context.Context, m *StorageDeletionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StorageDeletionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StorageDeletionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StorageDeletionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StorageDeletionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StorageDeletion mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -468,6 +1323,38 @@ func (c *UserClient) QueryXAccounts(_m *User) *XAccountQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(xaccount.Table, xaccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.XAccountsTable, user.XAccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPosts queries the posts edge of a User.
+func (c *UserClient) QueryPosts(_m *User) *PostQuery {
+	query := (&PostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMediaAssets queries the media_assets edge of a User.
+func (c *UserClient) QueryMediaAssets(_m *User) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MediaAssetsTable, user.MediaAssetsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -624,6 +1511,22 @@ func (c *XAccountClient) QueryOwner(_m *XAccount) *UserQuery {
 	return query
 }
 
+// QueryPosts queries the posts edge of a XAccount.
+func (c *XAccountClient) QueryPosts(_m *XAccount) *PostQuery {
+	query := (&PostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(xaccount.Table, xaccount.FieldID, id),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, xaccount.PostsTable, xaccount.PostsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *XAccountClient) Hooks() []Hook {
 	return c.hooks.XAccount
@@ -652,9 +1555,11 @@ func (c *XAccountClient) mutate(ctx context.Context, m *XAccountMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		SCSSession, User, XAccount []ent.Hook
+		MediaAsset, Post, PostItem, PublicationAttempt, SCSSession, StorageDeletion,
+		User, XAccount []ent.Hook
 	}
 	inters struct {
-		SCSSession, User, XAccount []ent.Interceptor
+		MediaAsset, Post, PostItem, PublicationAttempt, SCSSession, StorageDeletion,
+		User, XAccount []ent.Interceptor
 	}
 )
