@@ -74,6 +74,7 @@ type testAPI struct {
 	handler http.Handler
 	auth    *stubAuth
 	x       *stubX
+	posts   *stubPosts
 }
 
 func newTestAPI(t *testing.T) testAPI {
@@ -85,10 +86,12 @@ func newTestAPIWithProxies(t *testing.T, trustedProxyCIDRs []string) testAPI {
 	user := auth.User{ID: uuid.New(), Email: "person@example.com", CreatedAt: time.Date(2026, 8, 4, 12, 0, 0, 0, time.UTC)}
 	authService := &stubAuth{user: user}
 	xService := &stubX{beginURL: "https://x.example/authorize"}
+	postService := &stubPosts{}
 	sessions := auth.NewSessionManager(memstore.New(), time.Hour, false)
 	handler, err := NewRouter(Dependencies{
 		Auth:                 authService,
 		X:                    xService,
+		Posts:                postService,
 		Sessions:             sessions,
 		Readiness:            stubReadiness{},
 		FrontendOrigin:       testFrontendOrigin,
@@ -98,7 +101,7 @@ func newTestAPIWithProxies(t *testing.T, trustedProxyCIDRs []string) testAPI {
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}
-	return testAPI{handler: handler, auth: authService, x: xService}
+	return testAPI{handler: handler, auth: authService, x: xService, posts: postService}
 }
 
 func TestSignupRateLimitUsesClientIPResolvedThroughTrustedProxy(t *testing.T) {
@@ -290,7 +293,7 @@ func TestHealthRoutesDistinguishLivenessAndReadiness(t *testing.T) {
 	}
 
 	sessions := auth.NewSessionManager(memstore.New(), time.Hour, false)
-	handler, err := NewRouter(Dependencies{Auth: api.auth, X: api.x, Sessions: sessions, Readiness: stubReadiness{err: errors.New("database unavailable")}, FrontendOrigin: testFrontendOrigin, FrontendXRedirectURL: testFrontendOrigin + "/settings/integrations"})
+	handler, err := NewRouter(Dependencies{Auth: api.auth, X: api.x, Posts: api.posts, Sessions: sessions, Readiness: stubReadiness{err: errors.New("database unavailable")}, FrontendOrigin: testFrontendOrigin, FrontendXRedirectURL: testFrontendOrigin + "/settings/integrations"})
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}

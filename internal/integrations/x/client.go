@@ -20,6 +20,8 @@ type XEndpoints struct {
 	TokenURL         string
 	APIBaseURL       string
 	RevokeURL        string
+	MediaUploadURL   string
+	MediaMetadataURL string
 }
 
 func DefaultXEndpoints() XEndpoints {
@@ -28,6 +30,8 @@ func DefaultXEndpoints() XEndpoints {
 		TokenURL:         "https://api.x.com/2/oauth2/token",
 		APIBaseURL:       "https://api.x.com",
 		RevokeURL:        "https://api.x.com/2/oauth2/revoke",
+		MediaUploadURL:   "https://upload.twitter.com/1.1/media/upload.json",
+		MediaMetadataURL: "https://upload.twitter.com/1.1/media/metadata/create.json",
 	}
 }
 

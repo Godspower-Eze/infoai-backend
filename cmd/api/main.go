@@ -16,7 +16,11 @@ import (
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/config"
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/database"
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/errorreporting"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/mediastorage"
+	"github.com/Godspower-Eze/infoai-backend/internal/platform/riverqueue"
+	"github.com/Godspower-Eze/infoai-backend/internal/posts"
 	"github.com/alexedwards/scs/pgxstore"
+	"github.com/riverqueue/river"
 )
 
 func main() {
@@ -68,10 +72,28 @@ func run(logger *slog.Logger) (runErr error) {
 		xintegration.NewOAuthSession(sessions, nil),
 		nil,
 	)
+	mediaStorage, err := mediastorage.NewLocal(cfg.MediaStorageRoot)
+	if err != nil {
+		return err
+	}
+	riverClient, err := riverqueue.New(connections.SQL, river.NewWorkers(), apiRiverConfig())
+	if err != nil {
+		return err
+	}
+	postRepository := posts.NewEntPostRepository(connections.EntClient)
+	publicationRepository := posts.NewEntPublicationRepository(connections.SQL, posts.NewRiverQueue(riverClient))
+	postService := posts.NewServiceWithPublishing(posts.PublishingDependencies{
+		Posts:              postRepository,
+		Publication:        publicationRepository,
+		Outcomes:           publicationRepository,
+		PublishedDeletions: publicationRepository,
+		Retries:            publicationRepository,
+	}, posts.DefaultTextPolicy(), posts.DefaultMediaPolicy(), mediaStorage)
 
 	handler, err := httpapi.NewRouter(httpapi.Dependencies{
 		Auth:                 authService,
 		X:                    xService,
+		Posts:                postService,
 		Sessions:             sessions,
 		Readiness:            connections.Pool,
 		FrontendOrigin:       cfg.FrontendOrigin,
@@ -114,4 +136,8 @@ func run(logger *slog.Logger) (runErr error) {
 	}
 	logger.Info("api stopped gracefully")
 	return nil
+}
+
+func apiRiverConfig() riverqueue.Config {
+	return riverqueue.Config{PublishWorkers: 1, CleanupWorkers: 1, JobTimeout: 2 * time.Minute, RescueStuckJobsAfter: 3 * time.Minute, SkipUnknownJobCheck: true}
 }

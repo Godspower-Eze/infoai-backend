@@ -10,6 +10,7 @@ import (
 
 	"github.com/Godspower-Eze/infoai-backend/ent"
 	"github.com/Godspower-Eze/infoai-backend/ent/post"
+	"github.com/Godspower-Eze/infoai-backend/ent/storagedeletion"
 	"github.com/Godspower-Eze/infoai-backend/ent/user"
 	"github.com/Godspower-Eze/infoai-backend/ent/xaccount"
 	"github.com/Godspower-Eze/infoai-backend/internal/platform/database"
@@ -126,6 +127,79 @@ func TestEntPostRepositoryReplacesOnlyEditableOwnedItems(t *testing.T) {
 	if _, err := repository.ReplaceItems(ctx, owner.ID, created.ID, []ItemInput{{Text: "late"}}); !errors.Is(err, ErrNotEditable) {
 		t.Fatalf("published ReplaceItems() error = %v, want ErrNotEditable", err)
 	}
+}
+
+func TestEntPostRepositoryReplacementPreservesRetainedMediaAndQueuesOmittedMedia(t *testing.T) {
+	client := openPostTestClient(t)
+	repository := NewEntPostRepository(client)
+	owner := createPostTestOwner(t, client)
+	account := createPostTestAccount(t, client, owner.ID, "None")
+	ctx := context.Background()
+	created, err := repository.Create(ctx, CreateCommand{OwnerID: owner.ID, XAccountID: account.ID, CreationMode: CreationModeUser, Items: []ItemInput{{Text: "keep"}, {Text: "remove"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	keepKey, removeKey := "media/keep-"+uuid.NewString(), "media/remove-"+uuid.NewString()
+	createPostTestMedia(t, client, owner.ID, created.Items[0].ID, keepKey)
+	createPostTestMedia(t, client, owner.ID, created.Items[1].ID, removeKey)
+	updated, err := repository.ReplaceItems(ctx, owner.ID, created.ID, []ItemInput{{ID: created.Items[0].ID, Text: "kept"}, {Text: "new"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Items[0].ID != created.Items[0].ID || len(updated.Items[0].Media) != 1 || updated.Items[0].Media[0].StorageKey != keepKey {
+		t.Fatalf("retained item = %+v", updated.Items[0])
+	}
+	if exists, _ := client.StorageDeletion.Query().Where(storagedeletion.StorageKeyEQ(removeKey)).Exist(ctx); !exists {
+		t.Fatal("omitted media cleanup record missing")
+	}
+}
+
+func TestEntPostRepositoryAddsRemovesAndDeletesMediaWithDurableCleanup(t *testing.T) {
+	client := openPostTestClient(t)
+	repository := NewEntPostRepository(client)
+	owner := createPostTestOwner(t, client)
+	account := createPostTestAccount(t, client, owner.ID, "None")
+	ctx := context.Background()
+	created, err := repository.Create(ctx, CreateCommand{OwnerID: owner.ID, XAccountID: account.ID, CreationMode: CreationModeUser, Items: []ItemInput{{Text: "draft"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := "media/" + uuid.NewString()
+	mediaID := uuid.New()
+	updated, err := repository.AddMedia(ctx, AddMediaCommand{OwnerID: owner.ID, PostID: created.ID, ItemID: created.Items[0].ID, Category: MediaImage, Media: Media{ID: mediaID, StorageKey: key, OriginalFilename: "image.png", MIMEType: "image/png", Size: 8, SHA256: make([]byte, 32)}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(updated.Items[0].Media) != 1 {
+		t.Fatalf("media = %+v", updated.Items[0].Media)
+	}
+	if err := repository.RemoveMedia(ctx, RemoveMediaCommand{OwnerID: owner.ID, PostID: created.ID, ItemID: created.Items[0].ID, MediaID: mediaID}); err != nil {
+		t.Fatal(err)
+	}
+	if exists, _ := client.StorageDeletion.Query().Where(storagedeletion.StorageKeyEQ(key)).Exist(ctx); !exists {
+		t.Fatal("removed media cleanup record missing")
+	}
+
+	secondKey := "media/" + uuid.NewString()
+	createPostTestMedia(t, client, owner.ID, created.Items[0].ID, secondKey)
+	if err := repository.Delete(ctx, owner.ID, created.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repository.Get(ctx, owner.ID, created.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("deleted Get() error = %v", err)
+	}
+	if exists, _ := client.StorageDeletion.Query().Where(storagedeletion.StorageKeyEQ(secondKey)).Exist(ctx); !exists {
+		t.Fatal("draft deletion cleanup record missing")
+	}
+}
+
+func createPostTestMedia(t *testing.T, client *ent.Client, ownerID, itemID uuid.UUID, key string) *ent.MediaAsset {
+	t.Helper()
+	stored, err := client.MediaAsset.Create().SetOwnerID(ownerID).SetPostItemID(itemID).SetPosition(0).SetStorageKey(key).SetOriginalFilename("image.png").SetMimeType("image/png").SetSizeBytes(8).SetSha256Checksum(make([]byte, 32)).Save(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return stored
 }
 
 func openPostTestClient(t *testing.T) *ent.Client {

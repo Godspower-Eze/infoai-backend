@@ -19,6 +19,8 @@ type Config struct {
 	CleanupWorkers       int
 	JobTimeout           time.Duration
 	RescueStuckJobsAfter time.Duration
+	PeriodicJobs         []*river.PeriodicJob
+	SkipUnknownJobCheck  bool
 }
 
 func New(db *sql.DB, workers *river.Workers, cfg Config) (*river.Client[*sql.Tx], error) {
@@ -57,6 +59,8 @@ func buildRiverConfig(workers *river.Workers, cfg Config) (*river.Config, error)
 			PublishQueue:     {MaxWorkers: cfg.PublishWorkers},
 			MaintenanceQueue: {MaxWorkers: cfg.CleanupWorkers},
 		},
-		Workers: workers,
+		Workers:             workers,
+		PeriodicJobs:        cfg.PeriodicJobs,
+		SkipUnknownJobCheck: cfg.SkipUnknownJobCheck,
 	}, nil
 }

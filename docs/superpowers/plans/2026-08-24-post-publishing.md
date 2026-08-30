@@ -408,7 +408,7 @@ git commit -m "feat: add post draft service"
 
 ---
 
-### Task 5: Add authenticated post CRUD and media HTTP endpoints
+### Task 5: Add authenticated draft CRUD and media HTTP endpoints
 
 **Files:**
 - Create: `internal/httpapi/post_handlers.go`
@@ -421,12 +421,12 @@ git commit -m "feat: add post draft service"
 
 **Interfaces:**
 - Consumes Task 4 post-service commands and Task 3 `MediaStorage`.
-- Produces authenticated JSON endpoints for draft CRUD/schedule/cancel and item-scoped multipart media upload/removal.
+- Produces authenticated JSON endpoints for draft CRUD and item-scoped multipart media upload/removal. Task 6 owns schedule, reschedule, cancellation, and immediate-publish endpoints together with their transaction-bound River jobs.
 - Adds `Posts PostService` and `Media MediaStorage` to `httpapi.Dependencies`.
 
 - [ ] **Step 1: Write failing route/handler tests**
 
-Use fake services and session cookies. Assert authentication, ownership delegation, unknown-field rejection, `PATCH` CORS allowance, stable error codes, ordered response items, multipart limits, and schedule timestamps with offsets. Cover creating an empty draft item, uploading media through `/api/v1/posts/{postID}/items/{itemID}/media`, removing media through the corresponding item-scoped route, and rejecting item IDs that do not belong to the owner-scoped post.
+Use fake services and session cookies. Assert authentication, ownership delegation, unknown-field rejection, `PATCH` CORS allowance, stable error codes, and ordered response items. Cover creating an empty draft item, deleting an eligible draft, uploading media through `/api/v1/posts/{postID}/items/{itemID}/media`, removing media through the corresponding item-scoped route, multipart limits, and rejecting item IDs that do not belong to the owner-scoped post.
 
 ```go
 func TestCreatePostRequiresAuthentication(t *testing.T) {
@@ -443,11 +443,11 @@ Expected: FAIL because routes and dependency are absent.
 
 - [ ] **Step 3: Add handler interfaces, request/response DTOs, and routes**
 
-Handlers perform decoding, path UUID parsing, multipart bounding, service calls, and error mapping only. Add `PATCH` to CORS methods. Do not expose Ent objects. Publish and schedule map incomplete-item validation to `422` with the affected item position or ID.
+Handlers perform decoding, path UUID parsing, multipart bounding, service calls, and error mapping only. Add `PATCH` to CORS methods. Do not expose Ent objects. Task 6 maps publish/schedule incomplete-item validation to `422` with the affected item position or ID.
 
 - [ ] **Step 4: Implement media upload consistency**
 
-Generate the opaque key in the application service, call `MediaStorage.Put`, then persist metadata. If persistence fails, call `Delete`; if that fails, insert `StorageDeletion` through the repository.
+Generate the opaque key in the application service, call `MediaStorage.Put`, then persist metadata. If persistence fails, call `Delete`; if that fails, insert `StorageDeletion` through the repository. PATCH preserves retained item IDs and their media; omitted items, explicit media removal, and draft deletion insert `StorageDeletion` records transactionally before removing database associations. Published deletion remains in the later confirmed-X-deletion task.
 
 - [ ] **Step 5: Run validation**
 

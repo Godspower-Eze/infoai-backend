@@ -1,4 +1,4 @@
-.PHONY: build test test-db test-db-migrate generate migration migrate river-migrate run
+.PHONY: build test test-db test-db-migrate generate migration migrate river-migrate run run-worker
 
 GODOTENV_RUN := go run github.com/joho/godotenv/cmd/godotenv
 TEST_DATABASE_URL ?= postgres://infoai:infoai@localhost:5432/infoai_test?sslmode=disable
@@ -41,3 +41,6 @@ river-migrate:
 
 run:
 	go run ./cmd/api
+
+run-worker:
+	go run ./cmd/worker

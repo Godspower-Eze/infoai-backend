@@ -6,12 +6,15 @@ import (
 )
 
 var (
-	ErrNotFound          = errors.New("post not found")
-	ErrAccountNotFound   = errors.New("X account not found")
-	ErrNotEditable       = errors.New("post is not editable")
-	ErrInvalidTransition = errors.New("invalid post transition")
-	ErrInvalidInput      = errors.New("invalid post input")
-	ErrTextTooLong       = errors.New("post text is too long")
+	ErrNotFound             = errors.New("post not found")
+	ErrAccountNotFound      = errors.New("X account not found")
+	ErrNotEditable          = errors.New("post is not editable")
+	ErrInvalidTransition    = errors.New("invalid post transition")
+	ErrInvalidInput         = errors.New("invalid post input")
+	ErrTextTooLong          = errors.New("post text is too long")
+	ErrLeaseLost            = errors.New("publication lease was lost")
+	ErrOutcomeUnknown       = errors.New("publication outcome is unknown")
+	ErrConfirmationRequired = errors.New("confirmation is required before deleting from X")
 )
 
 type FieldError struct {

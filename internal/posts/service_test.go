@@ -3,8 +3,10 @@ package posts
 import (
 	"context"
 	"errors"
+	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -156,11 +158,114 @@ func TestDefaultTextPolicySupportsPremiumLimit(t *testing.T) {
 	}
 }
 
+func TestServiceUploadMediaStoresThenPersistsMetadata(t *testing.T) {
+	repository, ownerID, postID := repositoryWithPost(StatusDraft, []Item{{ID: uuid.New(), Text: ""}})
+	itemID := repository.posts[postID].Items[0].ID
+	storage := &memoryMediaStorage{}
+	service := NewServiceWithMedia(repository, DefaultTextPolicy(), DefaultMediaPolicy(), storage)
+
+	updated, err := service.UploadMedia(context.Background(), UploadMediaCommand{
+		OwnerID: ownerID, PostID: postID, ItemID: itemID, OriginalFilename: "image.png",
+		Header: pngHeader, Size: 8, Source: strings.NewReader(string(pngHeader)),
+	})
+	if err != nil {
+		t.Fatalf("UploadMedia() error = %v", err)
+	}
+	if storage.putKey == "" || !strings.Contains(storage.putKey, itemID.String()) || len(updated.Items[0].Media) != 1 || updated.Items[0].Media[0].StorageKey != storage.putKey {
+		t.Fatalf("stored key/post = %q / %+v", storage.putKey, updated)
+	}
+}
+
+func TestServiceUploadMediaCompensatesFailedMetadataPersistence(t *testing.T) {
+	repository, ownerID, postID := repositoryWithPost(StatusDraft, []Item{{ID: uuid.New()}})
+	itemID := repository.posts[postID].Items[0].ID
+	repository.addMediaErr = errors.New("database unavailable")
+	storage := &memoryMediaStorage{deleteErr: errors.New("filesystem unavailable")}
+	service := NewServiceWithMedia(repository, DefaultTextPolicy(), DefaultMediaPolicy(), storage)
+
+	_, err := service.UploadMedia(context.Background(), UploadMediaCommand{OwnerID: ownerID, PostID: postID, ItemID: itemID, OriginalFilename: "image.png", Header: pngHeader, Size: 8, Source: strings.NewReader(string(pngHeader))})
+	if err == nil {
+		t.Fatal("UploadMedia() error = nil")
+	}
+	if storage.deletedKey != storage.putKey || repository.queuedDeletion != storage.putKey {
+		t.Fatalf("compensation delete/queue = %q/%q, stored = %q", storage.deletedKey, repository.queuedDeletion, storage.putKey)
+	}
+}
+
+func TestServiceRemoveMediaDelegatesDurableCleanup(t *testing.T) {
+	repository, ownerID, postID := repositoryWithPost(StatusDraft, []Item{{ID: uuid.New()}})
+	service := NewServiceWithMedia(repository, DefaultTextPolicy(), DefaultMediaPolicy(), &memoryMediaStorage{})
+	command := RemoveMediaCommand{OwnerID: ownerID, PostID: postID, ItemID: repository.posts[postID].Items[0].ID, MediaID: uuid.New()}
+	if err := service.RemoveMedia(context.Background(), command); err != nil {
+		t.Fatalf("RemoveMedia() error = %v", err)
+	}
+	if repository.removedMedia != command.MediaID {
+		t.Fatalf("removed media = %s, want %s", repository.removedMedia, command.MediaID)
+	}
+}
+
 type accountKey struct{ ownerID, accountID uuid.UUID }
 
 type memoryPostRepository struct {
-	accounts map[accountKey]string
-	posts    map[uuid.UUID]Post
+	accounts       map[accountKey]string
+	posts          map[uuid.UUID]Post
+	addMediaErr    error
+	queuedDeletion string
+	removedMedia   uuid.UUID
+}
+
+func (r *memoryPostRepository) Delete(_ context.Context, ownerID, postID uuid.UUID) error {
+	if _, err := r.Get(context.Background(), ownerID, postID); err != nil {
+		return err
+	}
+	delete(r.posts, postID)
+	return nil
+}
+
+func (r *memoryPostRepository) AddMedia(_ context.Context, command AddMediaCommand) (Post, error) {
+	if r.addMediaErr != nil {
+		return Post{}, r.addMediaErr
+	}
+	post, err := r.Get(context.Background(), command.OwnerID, command.PostID)
+	if err != nil {
+		return Post{}, err
+	}
+	for index := range post.Items {
+		if post.Items[index].ID == command.ItemID {
+			post.Items[index].Media = append(post.Items[index].Media, command.Media)
+			r.posts[post.ID] = post
+			return post, nil
+		}
+	}
+	return Post{}, ErrNotFound
+}
+
+func (r *memoryPostRepository) RemoveMedia(_ context.Context, command RemoveMediaCommand) error {
+	r.removedMedia = command.MediaID
+	return nil
+}
+func (r *memoryPostRepository) QueueStorageDeletion(_ context.Context, key string) error {
+	r.queuedDeletion = key
+	return nil
+}
+
+type memoryMediaStorage struct {
+	putKey     string
+	deletedKey string
+	deleteErr  error
+}
+
+func (s *memoryMediaStorage) Put(_ context.Context, key string, source io.Reader) (StoredObject, error) {
+	s.putKey = key
+	data, err := io.ReadAll(source)
+	return StoredObject{Key: key, Size: int64(len(data)), SHA256: make([]byte, 32)}, err
+}
+func (*memoryMediaStorage) Open(context.Context, string) (io.ReadCloser, error) {
+	return nil, errors.New("unused")
+}
+func (s *memoryMediaStorage) Delete(_ context.Context, key string) error {
+	s.deletedKey = key
+	return s.deleteErr
 }
 
 func newMemoryPostRepository() *memoryPostRepository {
@@ -228,3 +333,51 @@ func repositoryWithPost(status Status, items []Item) (*memoryPostRepository, uui
 	repository.posts[postID] = Post{ID: postID, OwnerID: ownerID, XAccountID: accountID, CreationMode: CreationModeUser, Status: status, Items: items}
 	return repository, ownerID, postID
 }
+
+func TestNewServiceWithPublishingRetainsExplicitCapabilities(t *testing.T) {
+	postsRepository := newMemoryPostRepository()
+	publication := &stubPublicationRepository{}
+	outcomes := &stubOutcomeRepository{}
+	deletions := &stubPublishedDeletionRepository{}
+	retries := &stubRetryRepository{}
+
+	service := NewServiceWithPublishing(PublishingDependencies{
+		Posts:              postsRepository,
+		Publication:        publication,
+		Outcomes:           outcomes,
+		PublishedDeletions: deletions,
+		Retries:            retries,
+	}, DefaultTextPolicy(), DefaultMediaPolicy(), &memoryMediaStorage{})
+
+	if service.repository != postsRepository || service.publication != publication || service.outcomes != outcomes || service.publishedDeletions != deletions || service.retries != retries {
+		t.Fatal("service did not retain the explicitly supplied publishing capabilities")
+	}
+}
+
+type stubPublicationRepository struct{}
+
+func (*stubPublicationRepository) Publish(context.Context, uuid.UUID, uuid.UUID) (Post, error) {
+	return Post{}, nil
+}
+func (*stubPublicationRepository) Schedule(context.Context, uuid.UUID, uuid.UUID, time.Time) (Post, error) {
+	return Post{}, nil
+}
+func (*stubPublicationRepository) CancelSchedule(context.Context, uuid.UUID, uuid.UUID) (Post, error) {
+	return Post{}, nil
+}
+
+type stubOutcomeRepository struct{}
+
+func (*stubOutcomeRepository) ResolveOutcome(context.Context, ResolveOutcomeCommand, string) (Post, error) {
+	return Post{}, nil
+}
+
+type stubPublishedDeletionRepository struct{}
+
+func (*stubPublishedDeletionRepository) RequestDeletion(context.Context, DeleteCommand) (bool, error) {
+	return false, nil
+}
+
+type stubRetryRepository struct{}
+
+func (*stubRetryRepository) Retry(context.Context, RetryCommand) (Post, error) { return Post{}, nil }
